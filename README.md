@@ -12,14 +12,17 @@ CuriosaMente, proyecto para mejorar el pensamiento critico en jovenes. Memoria p
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/tu-usuario/tu-repositorio.git
+   git clone https://github.com/BastianFig/BastianFigMemoria.git
 
 2. Navega hacia la carpeta del proyecto
+    ```bash
     cd tu-repositorio
 
 3. Instala las dependencias
+    ```bash
     npm install
 
 4. Ejecución de Proyecto
+    ```bash
     npx nodemon app
-    
+
