@@ -1,0 +1,132 @@
+/* Mantener el fondo */
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #3f87a6, #ebf8e1); /* Azul a un verde claro */
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Fondo animado */
+body::before, body::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+    animation: float 6s ease-in-out infinite;
+}
+
+body::before {
+    top: -150px;
+    left: -150px;
+    animation-delay: 0s;
+}
+
+body::after {
+    bottom: -150px;
+    right: -150px;
+    animation-delay: 3s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+/* Estilos de la barra de navegación */
+/* Estilos de la barra de navegación */
+.navbar {
+    width: 100%;
+    padding: 10px; /* Reducido el padding para hacerla más pequeña */
+    background: rgba(0, 0, 0, 0.7); /* Fondo negro semi-transparente */
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1; /* Para asegurarse de que esté encima del fondo */
+}
+
+.navbar-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.navbar h2 {
+    color: #fff; /* Color blanco para el texto para contrastar con el fondo negro */
+    margin: 0; /* Eliminar márgenes para mantener la barra compacta */
+}
+
+/* Contenedor de niveles */
+.levels-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Espaciado entre las tarjetas */
+    margin-top: 80px; /* Espacio para la navbar */
+    z-index: 1; /* Para asegurarse de que las tarjetas estén por encima del fondo */
+}
+
+/* Estilos para las tarjetas de nivel */
+.level-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    text-align: center;
+    width: 200px; /* Ancho de las tarjetas */
+}
+
+.level-card:hover {
+    transform: translateY(-10px); /* Efecto al pasar el mouse */
+}
+
+.level-card h3 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.level-card p {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+/* Botón de ingresar en las tarjetas */
+.level-card button {
+    padding: 10px 20px;
+    background-color: #3f87a6;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.level-card button:hover {
+    background-color: #ebf8e1; /* Color al pasar el mouse */
+    color: #3f87a6;
+}
+
+.level-card img.level-image {
+    max-width: 100%; /* La imagen no superará el ancho de la tarjeta */
+    max-height: 150px; /* Ajusta la altura máxima de la imagen */
+    width: auto; /* Mantiene la proporción de la imagen */
+    height: auto; /* Mantiene la proporción de la imagen */
+    border-radius: 10px; /* Bordes redondeados para las imágenes */
+    margin-bottom: 10px; /* Espacio entre la imagen y el título */
+}
+

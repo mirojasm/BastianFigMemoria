@@ -28,10 +28,14 @@ app.use(session({
     saveUnitialized:true
 }));
 app.get('/',(req,res)=>{
-    res.render('index/index')
+    res.render('login/login')
 })
 app.get('/login',(req,res)=>{
     res.render('login/login')
+})
+
+app.get('/levels',(req,res)=>{
+    res.render('levels/niveles')
 })
 
 app.listen(3000, (req, res)=>{
