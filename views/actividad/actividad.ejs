@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad Colaborativa</title>
+    <link rel="stylesheet" href="/resources/css/styleactividad.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="activity-container">
+        <h1>Actividad Colaborativa</h1>
+        <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
+        <div id="waiting-message">Esperando a tu compañero...</div>
+        <div id="activity-content" style="display: none;">
+            <div class="image-container">
+                <img id="activity-image" src="/resources/images/actividad_imagen.jpg" alt="Imagen de la actividad">
+            </div>
+            <div class="answer-container">
+                <textarea id="player-answer" rows="4" placeholder="Escribe tu respuesta aquí..."></textarea>
+                <textarea id="partner-answer" rows="4" placeholder="Respuesta de tu compañero" readonly></textarea>
+            </div>
+            <div class="final-answer-container">
+                <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta"></textarea>
+                <button id="submit-answer">Enviar Respuesta Final</button>
+            </div>
+        </div>
+    </div>
+    <script src="/resources/js/actividad.js"></script>
+</body>
+</html>
