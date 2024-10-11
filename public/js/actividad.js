@@ -9,8 +9,22 @@ const finalAnswer = document.getElementById('final-answer');
 const submitButton = document.getElementById('submit-answer');
 const activityImage = document.getElementById('activity-image');
 
-// Unirse a la sala al cargar la página
-socket.emit('join-room', roomId);
+socket.on('connect', () => {
+    console.log('Conectado al servidor');
+    socket.emit('join-room', roomId);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Desconectado del servidor:', reason);
+    waitingMessage.textContent = 'Desconectado del servidor. Intentando reconectar...';
+    waitingMessage.style.display = 'block';
+    activityContent.style.display = 'none';
+});
+
+socket.on('reconnect', () => {
+    console.log('Reconectado al servidor');
+    socket.emit('reconnect-to-room', roomId);
+});
 
 socket.on('waiting-for-partner', () => {
     waitingMessage.textContent = 'Esperando a tu compañero...';
@@ -22,7 +36,7 @@ socket.on('activity-ready', () => {
     waitingMessage.textContent = '¡Compañero encontrado! La actividad comenzará en breve...';
     setTimeout(() => {
         socket.emit('start-activity', roomId);
-    }, 3000); // Espera 3 segundos antes de iniciar la actividad
+    }, 3000);
 });
 
 socket.on('activity-started', () => {
@@ -49,35 +63,24 @@ submitButton.addEventListener('click', () => {
 });
 
 socket.on('partner-disconnected', () => {
-    alert('Tu compañero se ha desconectado. Por favor, vuelve a la selección de sala.');
-    window.location.href = '/seleccionar-sala';
+    waitingMessage.textContent = 'Tu compañero se ha desconectado. Esperando reconexión...';
+    waitingMessage.style.display = 'block';
+    activityContent.style.display = 'none';
 });
 
-socket.on('connect_error', (error) => {
-    console.error('Error de conexión:', error);
-    alert('Error de conexión. Por favor, recarga la página.');
+socket.on('partner-reconnected', () => {
+    waitingMessage.style.display = 'none';
+    activityContent.style.display = 'block';
+});
+
+socket.on('room-not-available', () => {
+    alert('La sala ya no está disponible. Por favor, vuelve a la selección de sala.');
+    window.location.href = '/seleccionar-sala';
 });
 
 // Mantener la conexión activa
 setInterval(() => {
-    socket.emit('heartbeat', roomId);
+    if (socket.connected) {
+        socket.emit('heartbeat', roomId);
+    }
 }, 30000);
-
-// Manejar reconexiones
-socket.on('reconnect', (attemptNumber) => {
-    console.log('Reconectado al servidor después de', attemptNumber, 'intentos');
-    socket.emit('join-room', roomId); // Volver a unirse a la sala después de reconectar
-});
-
-socket.on('reconnecting', (attemptNumber) => {
-    console.log('Intentando reconectar...', attemptNumber);
-});
-
-socket.on('reconnect_error', (error) => {
-    console.error('Error de reconexión:', error);
-});
-
-socket.on('reconnect_failed', () => {
-    console.error('Falló la reconexión');
-    alert('No se pudo reconectar al servidor. Por favor, recarga la página.');
-});

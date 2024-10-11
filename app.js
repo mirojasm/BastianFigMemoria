@@ -54,31 +54,17 @@ app.get('/seleccionar-sala', (req, res) => {
 
 // Objeto para almacenar las salas y sus participantes
 const rooms = {};
-const roomTimers = {};
-const connectedUsers = new Set();
+const connectedUsers = new Map();
 
 // Función para obtener el número de participantes en una sala
 function getRoomParticipants(roomId) {
-    return rooms[roomId] ? rooms[roomId].length : 0;
-}
-
-// Función para programar la eliminación de una sala
-function scheduleRoomDeletion(roomId) {
-    console.log(`Programando eliminación de la sala ${roomId} en 5 minutos`);
-    clearTimeout(roomTimers[roomId]);
-    roomTimers[roomId] = setTimeout(() => {
-        if (rooms[roomId] && rooms[roomId].length === 0) {
-            delete rooms[roomId];
-            delete roomTimers[roomId];
-            console.log(`Sala ${roomId} eliminada después de 5 minutos de inactividad`);
-        }
-    }, 5 * 60 * 1000);
+    return rooms[roomId] ? rooms[roomId].size : 0;
 }
 
 // Ruta para la actividad colaborativa
 app.get('/actividad/:roomId', (req, res) => {
     const roomId = req.params.roomId;
-    if (rooms[roomId] && rooms[roomId].length <= 2) {
+    if (rooms[roomId] && rooms[roomId].size <= 2) {
         res.render('actividad/actividad', { roomId: roomId });
     } else {
         res.redirect('/seleccionar-sala');
@@ -88,44 +74,28 @@ app.get('/actividad/:roomId', (req, res) => {
 // Lógica de Socket.IO para la actividad colaborativa
 io.on('connection', (socket) => {
     console.log('Un usuario se ha conectado', socket.id);
-    connectedUsers.add(socket.id);
+    connectedUsers.set(socket.id, { room: null });
     
-    let currentRoom = null;
-
-    // Manejar reconexiones
-    socket.on('reconnect_attempt', () => {
-        console.log(`Intento de reconexión para el usuario ${socket.id}`);
-    });
-
-    socket.on('reconnect', (attemptNumber) => {
-        console.log(`Usuario ${socket.id} reconectado después de ${attemptNumber} intentos`);
-    });
-
-    socket.on('reconnect_error', (error) => {
-        console.log(`Error de reconexión para el usuario ${socket.id}:`, error);
-    });
-
     socket.on('create-room', () => {
         const roomId = Math.random().toString(36).substring(7);
-        rooms[roomId] = [socket.id];
+        rooms[roomId] = new Set([socket.id]);
         socket.join(roomId);
-        currentRoom = roomId;
+        connectedUsers.get(socket.id).room = roomId;
         console.log(`Sala creada: ${roomId}, Participantes: ${getRoomParticipants(roomId)}`);
         socket.emit('room-created', roomId);
     });
 
     socket.on('join-room', (roomId) => {
         console.log(`Intento de unirse a la sala: ${roomId}`);
-        if (rooms[roomId] && rooms[roomId].length < 2) {
-            rooms[roomId].push(socket.id);
+        if (rooms[roomId] && rooms[roomId].size < 2) {
+            rooms[roomId].add(socket.id);
             socket.join(roomId);
-            currentRoom = roomId;
-            clearTimeout(roomTimers[roomId]);
+            connectedUsers.get(socket.id).room = roomId;
             console.log(`Usuario ${socket.id} unido a la sala ${roomId}. Participantes: ${getRoomParticipants(roomId)}`);
             
-            if (rooms[roomId].length === 1) {
+            if (rooms[roomId].size === 1) {
                 socket.emit('waiting-for-partner', roomId);
-            } else if (rooms[roomId].length === 2) {
+            } else if (rooms[roomId].size === 2) {
                 console.log(`Actividad lista para iniciar en la sala ${roomId}`);
                 io.to(roomId).emit('activity-ready', roomId);
             }
@@ -136,34 +106,45 @@ io.on('connection', (socket) => {
     });
 
     socket.on('start-activity', (roomId) => {
-        if (rooms[roomId] && rooms[roomId].length === 2) {
+        if (rooms[roomId] && rooms[roomId].size === 2) {
             console.log(`Actividad iniciada en la sala ${roomId}`);
             io.to(roomId).emit('activity-started', roomId);
         }
     });
 
     socket.on('update-answer', (data) => {
-        if (currentRoom) {
-            socket.to(currentRoom).emit('partner-update', data.answer);
+        const roomId = connectedUsers.get(socket.id).room;
+        if (roomId) {
+            socket.to(roomId).emit('partner-update', data.answer);
         }
     });
 
     socket.on('disconnect', (reason) => {
         console.log(`Usuario desconectado: ${socket.id}, Razón: ${reason}`);
-        connectedUsers.delete(socket.id);
-        
-        if (currentRoom) {
-            const roomId = currentRoom;
-            const index = rooms[roomId].indexOf(socket.id);
-            if (index !== -1) {
-                rooms[roomId].splice(index, 1);
+        const userInfo = connectedUsers.get(socket.id);
+        if (userInfo && userInfo.room) {
+            const roomId = userInfo.room;
+            if (rooms[roomId]) {
+                rooms[roomId].delete(socket.id);
                 console.log(`Usuario removido de la sala ${roomId}. Participantes restantes: ${getRoomParticipants(roomId)}`);
-                if (rooms[roomId].length === 0) {
-                    scheduleRoomDeletion(roomId);
-                } else {
-                    io.to(roomId).emit('partner-disconnected');
+                if (rooms[roomId].size > 0) {
+                    socket.to(roomId).emit('partner-disconnected');
                 }
+                // No eliminamos la sala aquí para permitir reconexiones
             }
+        }
+        connectedUsers.delete(socket.id);
+    });
+
+    socket.on('reconnect-to-room', (roomId) => {
+        if (rooms[roomId] && rooms[roomId].size < 2) {
+            rooms[roomId].add(socket.id);
+            socket.join(roomId);
+            connectedUsers.get(socket.id).room = roomId;
+            console.log(`Usuario ${socket.id} reconectado a la sala ${roomId}. Participantes: ${getRoomParticipants(roomId)}`);
+            io.to(roomId).emit('partner-reconnected');
+        } else {
+            socket.emit('room-not-available');
         }
     });
 
@@ -174,7 +155,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('heartbeat', (roomId) => {
-        // Manejar el heartbeat si es necesario
         console.log(`Heartbeat recibido de ${socket.id} en la sala ${roomId}`);
     });
 });
