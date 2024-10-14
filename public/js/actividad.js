@@ -74,21 +74,29 @@ function addMessageToChat(userId, message) {
     messageElement.appendChild(contentElement);
     
     chatMessages.appendChild(messageElement);
+    scrollChatToBottom();
+}
+
+function scrollChatToBottom() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-sendMessageButton.addEventListener('click', () => {
+function sendMessage() {
     const message = chatInput.value.trim();
     if (message) {
         socket.emit('chat-message', { roomId, message });
         addMessageToChat(myUserId, message);
         chatInput.value = '';
+        chatInput.focus();
     }
-});
+}
+
+sendMessageButton.addEventListener('click', sendMessage);
 
 chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        sendMessageButton.click();
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
     }
 });
 
@@ -97,9 +105,15 @@ socket.on('chat-message', (data) => {
 });
 
 submitButton.addEventListener('click', () => {
-    console.log('Respuesta final:', finalAnswer.value);
-    socket.emit('submit-final-answer', { roomId, answer: finalAnswer.value });
-    alert('Respuesta enviada con éxito!');
+    const answer = finalAnswer.value.trim();
+    if (answer) {
+        console.log('Respuesta final:', answer);
+        socket.emit('submit-final-answer', { roomId, answer });
+        alert('Respuesta enviada con éxito!');
+        finalAnswer.value = '';
+    } else {
+        alert('Por favor, escribe una respuesta antes de enviar.');
+    }
 });
 
 socket.on('partner-disconnected', () => {
@@ -124,3 +138,6 @@ setInterval(() => {
         socket.emit('heartbeat', roomId);
     }
 }, 30000);
+
+// Ajustar el scroll del chat cuando se redimensiona la ventana
+window.addEventListener('resize', scrollChatToBottom);

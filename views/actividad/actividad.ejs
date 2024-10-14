@@ -9,23 +9,31 @@
 </head>
 <body>
     <div class="activity-container">
-        <h1>Actividad Colaborativa</h1>
-        <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
-        <div id="waiting-message">Esperando a tu compañero...</div>
-        <div id="activity-content" style="display: none;">
-            <div class="image-container">
-                <img id="activity-image" src="/resources/images/prueba.jpg" alt="Imagen de la actividad">
+        <div class="main-content">
+            <h1>Actividad Colaborativa</h1>
+            <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
+            <div id="waiting-message">Esperando a tu compañero...</div>
+            <div id="activity-content" style="display: none;">
+                <div class="activity-info">
+                    <h2>Nivel 1 - Pregunta 1</h2>
+                    <p>Evaluación sobre el tema de la imagen</p>
+                </div>
+                <div class="image-container">
+                    <img id="activity-image" src="/resources/images/prueba.jpg" alt="Imagen de la actividad">
+                </div>
+                <div class="final-answer-container">
+                    <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta"></textarea>
+                    <button id="submit-answer">Enviar Respuesta Final</button>
+                </div>
             </div>
+        </div>
+        <div class="chat-sidebar">
             <div class="chat-container">
                 <div id="chat-messages"></div>
                 <div class="input-area">
                     <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
                     <button id="send-message">Enviar</button>
                 </div>
-            </div>
-            <div class="final-answer-container">
-                <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta"></textarea>
-                <button id="submit-answer">Enviar Respuesta Final</button>
             </div>
         </div>
     </div>
