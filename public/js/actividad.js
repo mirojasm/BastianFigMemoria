@@ -3,14 +3,18 @@ const socket = io();
 const roomId = document.getElementById('room-id').textContent;
 const waitingMessage = document.getElementById('waiting-message');
 const activityContent = document.getElementById('activity-content');
-const playerAnswer = document.getElementById('player-answer');
-const partnerAnswer = document.getElementById('partner-answer');
+const activityImage = document.getElementById('activity-image');
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const sendMessageButton = document.getElementById('send-message');
 const finalAnswer = document.getElementById('final-answer');
 const submitButton = document.getElementById('submit-answer');
-const activityImage = document.getElementById('activity-image');
+
+let myUserId;
 
 socket.on('connect', () => {
     console.log('Conectado al servidor');
+    myUserId = socket.id;
     socket.emit('join-room', roomId);
 });
 
@@ -48,12 +52,48 @@ socket.on('activity-started', () => {
     activityImage.style.clipPath = isPlayer1 ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)';
 });
 
-playerAnswer.addEventListener('input', () => {
-    socket.emit('update-answer', { roomId, answer: playerAnswer.value });
+function addMessageToChat(userId, message) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('chat-message');
+    
+    const authorElement = document.createElement('div');
+    authorElement.classList.add('message-author');
+    
+    if (userId === myUserId) {
+        messageElement.classList.add('own-message');
+        authorElement.textContent = 'Tú';
+    } else {
+        messageElement.classList.add('partner-message');
+        authorElement.textContent = 'Compañero';
+    }
+    
+    const contentElement = document.createElement('div');
+    contentElement.textContent = message;
+    
+    messageElement.appendChild(authorElement);
+    messageElement.appendChild(contentElement);
+    
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+sendMessageButton.addEventListener('click', () => {
+    const message = chatInput.value.trim();
+    if (message) {
+        socket.emit('chat-message', { roomId, message });
+        addMessageToChat(myUserId, message);
+        chatInput.value = '';
+    }
 });
 
-socket.on('partner-update', (answer) => {
-    partnerAnswer.value = answer;
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendMessageButton.click();
+    }
+});
+
+socket.on('chat-message', (data) => {
+    addMessageToChat(data.userId, data.message);
 });
 
 submitButton.addEventListener('click', () => {

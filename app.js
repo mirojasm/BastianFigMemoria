@@ -74,7 +74,7 @@ app.get('/actividad/:roomId', (req, res) => {
 // Lógica de Socket.IO para la actividad colaborativa
 io.on('connection', (socket) => {
     console.log('Un usuario se ha conectado', socket.id);
-    connectedUsers.set(socket.id, { room: null });
+    connectedUsers.set(socket.id, { room: null, userId: socket.id });
     
     socket.on('create-room', () => {
         const roomId = Math.random().toString(36).substring(7);
@@ -112,10 +112,19 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('update-answer', (data) => {
+    socket.on('chat-message', (data) => {
         const roomId = connectedUsers.get(socket.id).room;
         if (roomId) {
-            socket.to(roomId).emit('partner-update', data.answer);
+            console.log(`Mensaje recibido de ${socket.id} en sala ${roomId}: ${data.message}`);
+            socket.to(roomId).emit('chat-message', { userId: socket.id, message: data.message });
+        }
+    });
+
+    socket.on('submit-final-answer', (data) => {
+        const roomId = connectedUsers.get(socket.id).room;
+        if (roomId) {
+            console.log(`Respuesta final recibida para la sala ${roomId}:`, data.answer);
+            // Aquí puedes agregar la lógica para manejar la respuesta final
         }
     });
 
