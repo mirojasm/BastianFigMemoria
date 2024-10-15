@@ -120,6 +120,18 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Nuevo evento para manejar "escribiendo..."
+    socket.on('typing', ({ roomId }) => {
+        console.log(`Usuario ${socket.id} está escribiendo en la sala ${roomId}`);
+        socket.to(roomId).emit('typing');
+    });
+
+    // Nuevo evento para manejar "dejó de escribir"
+    socket.on('stop-typing', ({ roomId }) => {
+        console.log(`Usuario ${socket.id} dejó de escribir en la sala ${roomId}`);
+        socket.to(roomId).emit('stop-typing');
+    });
+
     socket.on('submit-final-answer', (data) => {
         const roomId = connectedUsers.get(socket.id).room;
         if (roomId) {

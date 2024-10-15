@@ -3,7 +3,7 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    background: linear-gradient(135deg, #3f87a6, #c3cfe2);
 }
 
 body {
@@ -13,7 +13,7 @@ body {
 }
 
 .activity-container {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: 15px;
     padding: 2vh;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -240,5 +240,19 @@ h1 {
     .message-author {
         font-size: 1.2vh;
     }
+}
+.typing-indicator {
+    font-style: italic;
+    color: #666;
+    padding: 3px 5px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    margin-bottom: 3px;
+    display: none;
+    font-size: 0.2em; /* Hace el texto más pequeño */
+    line-height: 1.2; /* Ajusta el espaciado entre líneas */
+    max-width: 80%; /* Limita el ancho máximo */
+    margin-left: auto; /* Alinea a la derecha */
+    margin-right: 10px; /* Añade un pequeño margen a la derecha */
 }
 

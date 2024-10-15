@@ -11,6 +11,15 @@ const finalAnswer = document.getElementById('final-answer');
 const submitButton = document.getElementById('submit-answer');
 
 let myUserId;
+let typingTimer;
+const typingTimeout = 1000; // 1 segundo
+
+// Crear el elemento para mostrar "escribiendo..."
+const typingIndicator = document.createElement('div');
+typingIndicator.className = 'typing-indicator';
+typingIndicator.textContent = 'El compañero está escribiendo...';
+typingIndicator.style.display = 'none';
+chatMessages.after(typingIndicator);
 
 socket.on('connect', () => {
     console.log('Conectado al servidor');
@@ -88,10 +97,20 @@ function sendMessage() {
         addMessageToChat(myUserId, message);
         chatInput.value = '';
         chatInput.focus();
+        socket.emit('stop-typing', { roomId });
     }
 }
 
 sendMessageButton.addEventListener('click', sendMessage);
+
+chatInput.addEventListener('input', () => {
+    socket.emit('typing', { roomId });
+    
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+        socket.emit('stop-typing', { roomId });
+    }, typingTimeout);
+});
 
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -102,6 +121,14 @@ chatInput.addEventListener('keypress', (e) => {
 
 socket.on('chat-message', (data) => {
     addMessageToChat(data.userId, data.message);
+});
+
+socket.on('typing', () => {
+    typingIndicator.style.display = 'block';
+});
+
+socket.on('stop-typing', () => {
+    typingIndicator.style.display = 'none';
 });
 
 submitButton.addEventListener('click', () => {
