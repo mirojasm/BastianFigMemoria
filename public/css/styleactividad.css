@@ -184,6 +184,7 @@ h1 {
     resize: none;
     font-size: 1.8vh;
     height: 10vh;
+    transition: border-color 0.3s ease;
 }
 
 #submit-answer {
@@ -201,6 +202,29 @@ h1 {
 
 #submit-answer:hover {
     background-color: #2c3e50;
+}
+
+.typing-indicator {
+    font-style: italic;
+    color: #666;
+    padding: 3px 5px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    margin-bottom: 3px;
+    display: none;
+    font-size: 1.4vh;
+    line-height: 1.2;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+#collaborative-editing-indicator {
+    display: none;
+    font-size: 1.4vh;
+    color: #ff9800;
+    margin-top: 0.5vh;
+    font-style: italic;
 }
 
 @media (max-width: 768px) {
@@ -240,19 +264,13 @@ h1 {
     .message-author {
         font-size: 1.2vh;
     }
-}
-.typing-indicator {
-    font-style: italic;
-    color: #666;
-    padding: 3px 5px;
-    background-color: #f0f0f0;
-    border-radius: 3px;
-    margin-bottom: 3px;
-    display: none;
-    font-size: 0.2em; /* Hace el texto más pequeño */
-    line-height: 1.2; /* Ajusta el espaciado entre líneas */
-    max-width: 80%; /* Limita el ancho máximo */
-    margin-left: auto; /* Alinea a la derecha */
-    margin-right: 10px; /* Añade un pequeño margen a la derecha */
+
+    #collaborative-editing-indicator {
+        font-size: 1.2vh;
+    }
+
+    .typing-indicator {
+        font-size: 1.2vh;
+    }
 }
 

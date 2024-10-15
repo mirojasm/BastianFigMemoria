@@ -120,13 +120,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Nuevo evento para manejar "escribiendo..."
     socket.on('typing', ({ roomId }) => {
         console.log(`Usuario ${socket.id} está escribiendo en la sala ${roomId}`);
         socket.to(roomId).emit('typing');
     });
 
-    // Nuevo evento para manejar "dejó de escribir"
     socket.on('stop-typing', ({ roomId }) => {
         console.log(`Usuario ${socket.id} dejó de escribir en la sala ${roomId}`);
         socket.to(roomId).emit('stop-typing');
@@ -137,6 +135,26 @@ io.on('connection', (socket) => {
         if (roomId) {
             console.log(`Respuesta final recibida para la sala ${roomId}:`, data.answer);
             // Aquí puedes agregar la lógica para manejar la respuesta final
+        }
+    });
+
+    socket.on('update-final-answer', (data) => {
+        const roomId = connectedUsers.get(socket.id).room;
+        if (roomId) {
+            console.log(`Actualización de respuesta final recibida de ${socket.id} en sala ${roomId}`);
+            io.to(roomId).emit('final-answer-updated', { 
+                content: data.content, 
+                cursorPosition: data.cursorPosition,
+                userId: socket.id
+            });
+        }
+    });
+
+    socket.on('editing-final-answer', (data) => {
+        const roomId = connectedUsers.get(socket.id).room;
+        if (roomId) {
+            console.log(`Usuario ${socket.id} ${data.isEditing ? 'está editando' : 'dejó de editar'} la respuesta final en sala ${roomId}`);
+            socket.to(roomId).emit('partner-editing-final-answer', data.isEditing);
         }
     });
 

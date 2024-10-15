@@ -9,6 +9,7 @@ const chatInput = document.getElementById('chat-input');
 const sendMessageButton = document.getElementById('send-message');
 const finalAnswer = document.getElementById('final-answer');
 const submitButton = document.getElementById('submit-answer');
+const collaborativeEditingIndicator = document.getElementById('collaborative-editing-indicator');
 
 let myUserId;
 let typingTimer;
@@ -168,3 +169,44 @@ setInterval(() => {
 
 // Ajustar el scroll del chat cuando se redimensiona la ventana
 window.addEventListener('resize', scrollChatToBottom);
+
+// Nuevo código para edición colaborativa
+let isEditingFinalAnswer = false;
+
+finalAnswer.addEventListener('input', () => {
+    const content = finalAnswer.value;
+    const cursorPosition = finalAnswer.selectionStart;
+    socket.emit('update-final-answer', { roomId, content, cursorPosition });
+});
+
+finalAnswer.addEventListener('focus', () => {
+    isEditingFinalAnswer = true;
+    socket.emit('editing-final-answer', { roomId, isEditing: true });
+});
+
+finalAnswer.addEventListener('blur', () => {
+    isEditingFinalAnswer = false;
+    socket.emit('editing-final-answer', { roomId, isEditing: false });
+});
+
+socket.on('final-answer-updated', ({ content, cursorPosition, userId }) => {
+    if (userId !== myUserId) {
+        const currentCursorPosition = finalAnswer.selectionStart;
+        finalAnswer.value = content;
+        if (!isEditingFinalAnswer) {
+            finalAnswer.setSelectionRange(cursorPosition, cursorPosition);
+        } else {
+            finalAnswer.setSelectionRange(currentCursorPosition, currentCursorPosition);
+        }
+    }
+});
+
+socket.on('partner-editing-final-answer', (isEditing) => {
+    if (isEditing) {
+        finalAnswer.style.border = '2px solid #ff9800';
+        collaborativeEditingIndicator.style.display = 'block';
+    } else {
+        finalAnswer.style.border = '1px solid #3f87a6';
+        collaborativeEditingIndicator.style.display = 'none';
+    }
+});
