@@ -104,8 +104,9 @@ body::after {
     color: #666;
 }
 
-/* Botón de ingresar en las tarjetas */
-.level-card button {
+/* Estilos para el botón en las tarjetas de nivel */
+.level-card a.button {
+    display: inline-block;
     padding: 10px 20px;
     background-color: #3f87a6;
     border: none;
@@ -113,11 +114,13 @@ body::after {
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    text-decoration: none; /* Elimina el subrayado del texto */
+    font-family: 'Poppins', sans-serif; /* Mantiene la consistencia con la fuente del body */
 }
 
-.level-card button:hover {
-    background-color: #ebf8e1; /* Color al pasar el mouse */
+.level-card a.button:hover {
+    background-color: #ebf8e1;
     color: #3f87a6;
 }
 
