@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad Colaborativa - Nivel 1 Pregunta 2</title>
+    <link rel="stylesheet" href="/resources/css/styleactividad.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="activity-container">
+        <div class="main-content">
+            <h1>Actividad Colaborativa</h1>
+            <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
+            <div id="waiting-message">Esperando a tu compañero...</div>
+            <div id="activity-content" style="display: none;">
+                <div class="activity-info">
+                    <h2>Nivel 1 - Pregunta 2</h2>
+                    <p>Evaluación sobre el texto proporcionado</p>
+                </div>
+                <div class="text-container">
+                    <p id="activity-text">
+                        <!-- El texto de la actividad se insertará aquí dinámicamente -->
+                    </p>
+                </div>
+                <div class="final-answer-container">
+                    <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta"></textarea>
+                    <div id="collaborative-editing-indicator">Tu compañero está editando...</div>
+                    <button id="submit-answer">Enviar Respuesta Final</button>
+                </div>
+            </div>
+        </div>
+        <div class="chat-sidebar">
+            <div class="chat-container">
+                <div id="chat-messages"></div>
+                <div class="input-area">
+                    <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+                    <button id="send-message">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/resources/js/actividad2.js"></script>
+</body>
+</html>

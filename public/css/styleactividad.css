@@ -274,3 +274,20 @@ h1 {
     }
 }
 
+/* para actividad 2 */
+.text-container {
+    background-color: #f8f9fa;
+    border: 1px solid #3f87a6;
+    border-radius: 10px;
+    padding: 2vh;
+    margin-bottom: 2vh;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+#activity-text {
+    font-size: 1.8vh;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+

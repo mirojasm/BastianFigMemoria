@@ -3,7 +3,7 @@ const socket = io();
 const roomId = document.getElementById('room-id').textContent;
 const waitingMessage = document.getElementById('waiting-message');
 const activityContent = document.getElementById('activity-content');
-const activityImage = document.getElementById('activity-image');
+const activityText = document.getElementById('activity-text');
 const chatMessages = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chat-input');
 const sendMessageButton = document.getElementById('send-message');
@@ -21,13 +21,6 @@ typingIndicator.className = 'typing-indicator';
 typingIndicator.textContent = 'El compañero está escribiendo...';
 typingIndicator.style.display = 'none';
 chatMessages.after(typingIndicator);
-
-// Crear el elemento para mostrar el mensaje de espera para la siguiente actividad
-const readyMessage = document.createElement('div');
-readyMessage.id = 'ready-message';
-readyMessage.style.display = 'none';
-readyMessage.textContent = 'Esperando a que tu compañero esté listo...';
-document.body.appendChild(readyMessage);
 
 socket.on('connect', () => {
     console.log('Conectado al servidor');
@@ -60,13 +53,10 @@ socket.on('activity-ready', () => {
     }, 3000);
 });
 
-socket.on('activity-started', () => {
+socket.on('activity-started', (data) => {
     waitingMessage.style.display = 'none';
     activityContent.style.display = 'block';
-    
-    // Determinar qué parte de la imagen mostrar
-    const isPlayer1 = Math.random() < 0.5;
-    activityImage.style.clipPath = isPlayer1 ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)';
+    activityText.textContent = data.text; // Mostrar el texto de la actividad
 });
 
 function addMessageToChat(userId, message) {
@@ -143,20 +133,17 @@ submitButton.addEventListener('click', () => {
     const answer = finalAnswer.value.trim();
     if (answer) {
         console.log('Respuesta final:', answer);
-        socket.emit('ready-for-next-activity', { roomId, answer });
-        submitButton.disabled = true;
-        readyMessage.style.display = 'block';
+        socket.emit('submit-final-answer', { roomId, answer });
+        // No mostraremos una alerta aquí, esperaremos la respuesta del servidor
     } else {
         alert('Por favor, escribe una respuesta antes de enviar.');
     }
 });
 
-socket.on('all-ready-next-activity', (data) => {
-    console.log('Todos listos para la siguiente actividad');
-    readyMessage.textContent = 'Tu compañero está listo. Pasando a la siguiente actividad...';
-    setTimeout(() => {
-        window.location.href = data.nextActivityUrl;
-    }, 3000); // Espera 3 segundos antes de redirigir
+// Agregar este nuevo evento para manejar la redirección
+socket.on('redirect', (url) => {
+    console.log('Redirigiendo a:', url);
+    window.location.href = url;
 });
 
 socket.on('partner-disconnected', () => {

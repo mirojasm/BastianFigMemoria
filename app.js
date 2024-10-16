@@ -55,13 +55,15 @@ app.get('/seleccionar-sala', (req, res) => {
 // Objeto para almacenar las salas y sus participantes
 const rooms = {};
 const connectedUsers = new Map();
+const currentActivity = {};
+const readyUsers = {};
 
 // Función para obtener el número de participantes en una sala
 function getRoomParticipants(roomId) {
     return rooms[roomId] ? rooms[roomId].size : 0;
 }
 
-// Ruta para la actividad colaborativa
+// Ruta para la primera actividad colaborativa
 app.get('/actividad/:roomId', (req, res) => {
     const roomId = req.params.roomId;
     if (rooms[roomId] && rooms[roomId].size <= 2) {
@@ -71,7 +73,17 @@ app.get('/actividad/:roomId', (req, res) => {
     }
 });
 
-// Lógica de Socket.IO para la actividad colaborativa
+// Nueva ruta para la segunda actividad
+app.get('/actividad2/:roomId', (req, res) => {
+    const roomId = req.params.roomId;
+    if (rooms[roomId] && rooms[roomId].size <= 2) {
+        res.render('actividad/actividad2', { roomId: roomId });
+    } else {
+        res.redirect('/seleccionar-sala');
+    }
+});
+
+// Lógica de Socket.IO para las actividades colaborativas
 io.on('connection', (socket) => {
     console.log('Un usuario se ha conectado', socket.id);
     connectedUsers.set(socket.id, { room: null, userId: socket.id });
@@ -108,7 +120,8 @@ io.on('connection', (socket) => {
     socket.on('start-activity', (roomId) => {
         if (rooms[roomId] && rooms[roomId].size === 2) {
             console.log(`Actividad iniciada en la sala ${roomId}`);
-            io.to(roomId).emit('activity-started', roomId);
+            currentActivity[roomId] = 1; // Iniciar con la primera actividad
+            io.to(roomId).emit('activity-started');
         }
     });
 
@@ -130,11 +143,36 @@ io.on('connection', (socket) => {
         socket.to(roomId).emit('stop-typing');
     });
 
-    socket.on('submit-final-answer', (data) => {
-        const roomId = connectedUsers.get(socket.id).room;
-        if (roomId) {
-            console.log(`Respuesta final recibida para la sala ${roomId}:`, data.answer);
-            // Aquí puedes agregar la lógica para manejar la respuesta final
+    socket.on('ready-for-next-activity', (data) => {
+        const roomId = data.roomId;
+        const userId = socket.id;
+
+        if (!readyUsers[roomId]) {
+            readyUsers[roomId] = new Set();
+        }
+
+        readyUsers[roomId].add(userId);
+        console.log(`Usuario ${userId} listo en sala ${roomId}`);
+
+        // Aquí puedes agregar lógica para guardar la respuesta en una base de datos si es necesario
+
+        if (readyUsers[roomId].size === rooms[roomId].size) {
+            console.log(`Todos los usuarios en la sala ${roomId} están listos`);
+            
+            if (!currentActivity[roomId]) {
+                currentActivity[roomId] = 1;
+            }
+
+            if (currentActivity[roomId] === 1) {
+                currentActivity[roomId] = 2;
+                const nextActivityUrl = `/actividad2/${roomId}`;
+                io.to(roomId).emit('all-ready-next-activity', { nextActivityUrl });
+            } else {
+                io.to(roomId).emit('activities-completed');
+            }
+
+            // Limpiar el conjunto de usuarios listos para esta sala
+            delete readyUsers[roomId];
         }
     });
 
@@ -169,10 +207,17 @@ io.on('connection', (socket) => {
                 if (rooms[roomId].size > 0) {
                     socket.to(roomId).emit('partner-disconnected');
                 }
-                // No eliminamos la sala aquí para permitir reconexiones
             }
         }
         connectedUsers.delete(socket.id);
+
+        // Eliminar al usuario de la lista de listos si se desconecta
+        Object.keys(readyUsers).forEach(roomId => {
+            if (readyUsers[roomId] && readyUsers[roomId].has(socket.id)) {
+                readyUsers[roomId].delete(socket.id);
+                console.log(`Usuario ${socket.id} eliminado de la lista de listos en la sala ${roomId}`);
+            }
+        });
     });
 
     socket.on('reconnect-to-room', (roomId) => {

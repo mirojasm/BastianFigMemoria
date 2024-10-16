@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargando siguiente actividad</title>
+    <link rel="stylesheet" href="/resources/css/styleloading.css">
+</head>
+<body>
+    <div class="loading-container">
+        <h1>Preparando la siguiente actividad</h1>
+        <div class="loading-spinner"></div>
+        <p>Por favor, espera un momento...</p>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            window.location.href = '<%= nextActivityUrl %>';
+        }, 3000);
+    </script>
+</body>
+</html>
