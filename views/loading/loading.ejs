@@ -15,7 +15,17 @@
 
     <script>
         setTimeout(() => {
-            window.location.href = '<%= nextActivityUrl %>';
+            fetch('/redirect-to-activity/<%= roomId %>')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Redirigiendo a:', data.nextActivityUrl);
+                    window.location.href = data.nextActivityUrl;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al cargar la siguiente actividad. Volviendo a la selección de sala.');
+                    window.location.href = '/seleccionar-sala';
+                });
         }, 3000);
     </script>
 </body>

@@ -29,6 +29,7 @@ body {
     display: flex;
     flex-direction: column;
     padding-right: 2vh;
+    position: relative;
 }
 
 .chat-sidebar {
@@ -51,11 +52,26 @@ h1 {
     color: #3f87a6;
 }
 
-#waiting-message {
-    text-align: center;
+#waiting-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.waiting-message {
+    background-color: #3f87a6;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
     font-size: 2.5vh;
-    color: #3f87a6;
-    margin: 2vh 0;
+    text-align: center;
 }
 
 .activity-info {
@@ -80,16 +96,23 @@ h1 {
 }
 
 .image-container {
-    text-align: center;
-    margin-bottom: 1vh;
-    flex: 0 0 auto;
+    width: 100%;
+    max-width: 500px; /* Ajusta este valor según tus necesidades */
+    margin: 0 auto;
+    aspect-ratio: 16 / 9; /* Mantiene una proporción de aspecto constante */
+    overflow: hidden;
+    position: relative;
 }
 
-#activity-image {
-    max-width: 100%;
-    max-height: 40vh;
-    border-radius: 10px;
-    object-fit: contain;
+#activity-image-1,
+#activity-image-2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Asegura que la imagen cubra todo el contenedor */
+    object-position: center; /* Centra la imagen dentro del contenedor */
 }
 
 .chat-container {
@@ -227,10 +250,27 @@ h1 {
     font-style: italic;
 }
 
+/* para actividad 2 */
+.text-container {
+    background-color: #f8f9fa;
+    border: 1px solid #3f87a6;
+    border-radius: 10px;
+    padding: 2vh;
+    margin-bottom: 2vh;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+#activity-text {
+    font-size: 1.8vh;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
 @media (max-width: 768px) {
-    .activity-container {
-        flex-direction: column;
-        height: auto;
+    .image-container {
+        max-width: 100%;
+        aspect-ratio: 4 / 3; /* Cambia la proporción para pantallas más pequeñas si lo deseas */
     }
 
     .main-content, .chat-sidebar {
@@ -272,22 +312,10 @@ h1 {
     .typing-indicator {
         font-size: 1.2vh;
     }
-}
 
-/* para actividad 2 */
-.text-container {
-    background-color: #f8f9fa;
-    border: 1px solid #3f87a6;
-    border-radius: 10px;
-    padding: 2vh;
-    margin-bottom: 2vh;
-    max-height: 40vh;
-    overflow-y: auto;
-}
-
-#activity-text {
-    font-size: 1.8vh;
-    line-height: 1.6;
-    color: #2c3e50;
+    .waiting-message {
+        font-size: 2vh;
+        padding: 15px;
+    }
 }
 

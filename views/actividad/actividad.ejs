@@ -12,14 +12,17 @@
         <div class="main-content">
             <h1>Actividad Colaborativa</h1>
             <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
-            <div id="waiting-message">Esperando a tu compañero...</div>
-            <div id="activity-content" style="display: none;">
+            <div id="activity-content">
+                <div id="waiting-overlay" style="display: none;">
+                    <div class="waiting-message">Esperando a tu compañero...</div>
+                </div>
                 <div class="activity-info">
                     <h2>Nivel 1 - Pregunta 1</h2>
                     <p>Evaluación sobre el tema de la imagen</p>
                 </div>
                 <div class="image-container">
-                    <img id="activity-image" src="/resources/images/prueba.jpg" alt="Imagen de la actividad">
+                    <img id="activity-image-1" src="/resources/images/nivel1.png" alt="Imagen de la actividad 1" style="display: none;">
+                    <img id="activity-image-2" src="/resources/images/prueba.jpg" alt="Imagen de la actividad 2" style="display: none;">
                 </div>
                 <div class="final-answer-container">
                     <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta"></textarea>

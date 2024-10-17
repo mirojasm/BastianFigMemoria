@@ -52,11 +52,28 @@ app.get('/seleccionar-sala', (req, res) => {
     res.render('actividad/seleccionar-sala');
 });
 
+// Nueva ruta para la página de carga
+app.get('/loading/:roomId', (req, res) => {
+    const roomId = req.params.roomId;
+    res.render('loading/loading', { roomId: roomId });
+});
+
+// Nueva ruta para manejar la redirección después de la carga
+app.get('/redirect-to-activity/:roomId', (req, res) => {
+    const roomId = req.params.roomId;
+    if (rooms[roomId] && rooms[roomId].size <= 2) {
+        res.json({ nextActivityUrl: `/actividad2/${roomId}` });
+    } else {
+        res.json({ nextActivityUrl: '/seleccionar-sala' });
+    }
+});
+
 // Objeto para almacenar las salas y sus participantes
 const rooms = {};
 const connectedUsers = new Map();
 const currentActivity = {};
 const readyUsers = {};
+const userImages = new Map(); // Para almacenar la asignación de imágenes
 
 // Función para obtener el número de participantes en una sala
 function getRoomParticipants(roomId) {
@@ -93,6 +110,7 @@ io.on('connection', (socket) => {
         rooms[roomId] = new Set([socket.id]);
         socket.join(roomId);
         connectedUsers.get(socket.id).room = roomId;
+        userImages.set(socket.id, 1); // Asignar imagen 1 al creador de la sala
         console.log(`Sala creada: ${roomId}, Participantes: ${getRoomParticipants(roomId)}`);
         socket.emit('room-created', roomId);
     });
@@ -103,13 +121,18 @@ io.on('connection', (socket) => {
             rooms[roomId].add(socket.id);
             socket.join(roomId);
             connectedUsers.get(socket.id).room = roomId;
+            userImages.set(socket.id, rooms[roomId].size); // Asignar imagen 1 o 2 según el orden de unión
             console.log(`Usuario ${socket.id} unido a la sala ${roomId}. Participantes: ${getRoomParticipants(roomId)}`);
             
             if (rooms[roomId].size === 1) {
                 socket.emit('waiting-for-partner', roomId);
             } else if (rooms[roomId].size === 2) {
                 console.log(`Actividad lista para iniciar en la sala ${roomId}`);
-                io.to(roomId).emit('activity-ready', roomId);
+                if (currentActivity[roomId] === 1 || !currentActivity[roomId]) {
+                    io.to(roomId).emit('activity-ready', roomId);
+                } else {
+                    io.to(roomId).emit('second-activity-ready', roomId);
+                }
             }
         } else {
             console.log(`Sala ${roomId} llena o no existe. Participantes actuales: ${getRoomParticipants(roomId)}`);
@@ -120,8 +143,11 @@ io.on('connection', (socket) => {
     socket.on('start-activity', (roomId) => {
         if (rooms[roomId] && rooms[roomId].size === 2) {
             console.log(`Actividad iniciada en la sala ${roomId}`);
-            currentActivity[roomId] = 1; // Iniciar con la primera actividad
-            io.to(roomId).emit('activity-started');
+            currentActivity[roomId] = currentActivity[roomId] || 1; // Iniciar con la primera actividad si no está definida
+            rooms[roomId].forEach(userId => {
+                const imageNumber = userImages.get(userId);
+                io.to(userId).emit('activity-started', { imageNumber });
+            });
         }
     });
 
@@ -165,10 +191,10 @@ io.on('connection', (socket) => {
 
             if (currentActivity[roomId] === 1) {
                 currentActivity[roomId] = 2;
-                const nextActivityUrl = `/actividad2/${roomId}`;
-                io.to(roomId).emit('all-ready-next-activity', { nextActivityUrl });
+                const loadingUrl = `/loading/${roomId}`;
+                io.to(roomId).emit('all-ready-next-activity', { loadingUrl });
             } else {
-                io.to(roomId).emit('activities-completed');
+                io.to(roomId).emit('all-activities-completed');
             }
 
             // Limpiar el conjunto de usuarios listos para esta sala
@@ -203,6 +229,7 @@ io.on('connection', (socket) => {
             const roomId = userInfo.room;
             if (rooms[roomId]) {
                 rooms[roomId].delete(socket.id);
+                userImages.delete(socket.id);
                 console.log(`Usuario removido de la sala ${roomId}. Participantes restantes: ${getRoomParticipants(roomId)}`);
                 if (rooms[roomId].size > 0) {
                     socket.to(roomId).emit('partner-disconnected');
@@ -225,6 +252,7 @@ io.on('connection', (socket) => {
             rooms[roomId].add(socket.id);
             socket.join(roomId);
             connectedUsers.get(socket.id).room = roomId;
+            userImages.set(socket.id, rooms[roomId].size);
             console.log(`Usuario ${socket.id} reconectado a la sala ${roomId}. Participantes: ${getRoomParticipants(roomId)}`);
             io.to(roomId).emit('partner-reconnected');
         } else {

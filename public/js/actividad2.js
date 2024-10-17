@@ -1,7 +1,6 @@
 const socket = io();
 
 const roomId = document.getElementById('room-id').textContent;
-const waitingMessage = document.getElementById('waiting-message');
 const activityContent = document.getElementById('activity-content');
 const activityText = document.getElementById('activity-text');
 const chatMessages = document.getElementById('chat-messages');
@@ -22,6 +21,15 @@ typingIndicator.textContent = 'El compañero está escribiendo...';
 typingIndicator.style.display = 'none';
 chatMessages.after(typingIndicator);
 
+// Ocultar cualquier mensaje de espera que pueda existir
+const waitingMessage = document.getElementById('waiting-message');
+if (waitingMessage) {
+    waitingMessage.style.display = 'none';
+}
+
+// Mostrar el contenido de la actividad inmediatamente
+activityContent.style.display = 'block';
+
 socket.on('connect', () => {
     console.log('Conectado al servidor');
     myUserId = socket.id;
@@ -30,9 +38,7 @@ socket.on('connect', () => {
 
 socket.on('disconnect', (reason) => {
     console.log('Desconectado del servidor:', reason);
-    waitingMessage.textContent = 'Desconectado del servidor. Intentando reconectar...';
-    waitingMessage.style.display = 'block';
-    activityContent.style.display = 'none';
+    alert('Te has desconectado del servidor. Por favor, recarga la página.');
 });
 
 socket.on('reconnect', () => {
@@ -40,23 +46,13 @@ socket.on('reconnect', () => {
     socket.emit('reconnect-to-room', roomId);
 });
 
-socket.on('waiting-for-partner', () => {
-    waitingMessage.textContent = 'Esperando a tu compañero...';
-    waitingMessage.style.display = 'block';
-    activityContent.style.display = 'none';
-});
-
-socket.on('activity-ready', () => {
-    waitingMessage.textContent = '¡Compañero encontrado! La actividad comenzará en breve...';
-    setTimeout(() => {
-        socket.emit('start-activity', roomId);
-    }, 3000);
-});
-
-socket.on('activity-started', (data) => {
-    waitingMessage.style.display = 'none';
+socket.on('second-activity-ready', () => {
+    console.log('Segunda actividad lista para comenzar');
     activityContent.style.display = 'block';
-    activityText.textContent = data.text; // Mostrar el texto de la actividad
+    if (waitingMessage) {
+        waitingMessage.style.display = 'none';
+    }
+    // Aquí puedes agregar cualquier inicialización específica para la segunda actividad
 });
 
 function addMessageToChat(userId, message) {
@@ -133,28 +129,27 @@ submitButton.addEventListener('click', () => {
     const answer = finalAnswer.value.trim();
     if (answer) {
         console.log('Respuesta final:', answer);
-        socket.emit('submit-final-answer', { roomId, answer });
-        // No mostraremos una alerta aquí, esperaremos la respuesta del servidor
+        socket.emit('ready-for-next-activity', { roomId, answer });
+        submitButton.disabled = true;
+        alert('Tu respuesta ha sido enviada. Esperando a tu compañero...');
     } else {
         alert('Por favor, escribe una respuesta antes de enviar.');
     }
 });
 
-// Agregar este nuevo evento para manejar la redirección
-socket.on('redirect', (url) => {
-    console.log('Redirigiendo a:', url);
-    window.location.href = url;
+socket.on('all-activities-completed', () => {
+    alert('¡Has completado todas las actividades!');
+    // Aquí puedes redirigir a una página de finalización o hacer lo que sea necesario
+    // Por ejemplo:
+    // window.location.href = '/actividades-completadas';
 });
 
 socket.on('partner-disconnected', () => {
-    waitingMessage.textContent = 'Tu compañero se ha desconectado. Esperando reconexión...';
-    waitingMessage.style.display = 'block';
-    activityContent.style.display = 'none';
+    alert('Tu compañero se ha desconectado. Por favor, espera a que se reconecte o recarga la página.');
 });
 
 socket.on('partner-reconnected', () => {
-    waitingMessage.style.display = 'none';
-    activityContent.style.display = 'block';
+    alert('Tu compañero se ha reconectado. Pueden continuar con la actividad.');
 });
 
 socket.on('room-not-available', () => {

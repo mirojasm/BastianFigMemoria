@@ -1,9 +1,11 @@
 const socket = io();
 
 const roomId = document.getElementById('room-id').textContent;
-const waitingMessage = document.getElementById('waiting-message');
+const waitingOverlay = document.getElementById('waiting-overlay');
+const waitingMessage = document.querySelector('.waiting-message');
 const activityContent = document.getElementById('activity-content');
-const activityImage = document.getElementById('activity-image');
+const activityImage1 = document.getElementById('activity-image-1');
+const activityImage2 = document.getElementById('activity-image-2');
 const chatMessages = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chat-input');
 const sendMessageButton = document.getElementById('send-message');
@@ -22,13 +24,6 @@ typingIndicator.textContent = 'El compañero está escribiendo...';
 typingIndicator.style.display = 'none';
 chatMessages.after(typingIndicator);
 
-// Crear el elemento para mostrar el mensaje de espera para la siguiente actividad
-const readyMessage = document.createElement('div');
-readyMessage.id = 'ready-message';
-readyMessage.style.display = 'none';
-readyMessage.textContent = 'Esperando a que tu compañero esté listo...';
-document.body.appendChild(readyMessage);
-
 socket.on('connect', () => {
     console.log('Conectado al servidor');
     myUserId = socket.id;
@@ -37,9 +32,7 @@ socket.on('connect', () => {
 
 socket.on('disconnect', (reason) => {
     console.log('Desconectado del servidor:', reason);
-    waitingMessage.textContent = 'Desconectado del servidor. Intentando reconectar...';
-    waitingMessage.style.display = 'block';
-    activityContent.style.display = 'none';
+    showWaitingMessage('Desconectado del servidor. Intentando reconectar...');
 });
 
 socket.on('reconnect', () => {
@@ -48,26 +41,40 @@ socket.on('reconnect', () => {
 });
 
 socket.on('waiting-for-partner', () => {
-    waitingMessage.textContent = 'Esperando a tu compañero...';
-    waitingMessage.style.display = 'block';
-    activityContent.style.display = 'none';
+    showWaitingMessage('Esperando a tu compañero...');
 });
 
 socket.on('activity-ready', () => {
-    waitingMessage.textContent = '¡Compañero encontrado! La actividad comenzará en breve...';
+    showWaitingMessage('¡Compañero encontrado! La actividad comenzará en breve...');
     setTimeout(() => {
         socket.emit('start-activity', roomId);
     }, 3000);
 });
 
-socket.on('activity-started', () => {
-    waitingMessage.style.display = 'none';
+socket.on('activity-started', (data) => {
+    hideWaitingMessage();
     activityContent.style.display = 'block';
     
-    // Determinar qué parte de la imagen mostrar
-    const isPlayer1 = Math.random() < 0.5;
-    activityImage.style.clipPath = isPlayer1 ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)';
+    // Mostrar la imagen correspondiente según la asignación del servidor
+    if (data.imageNumber === 1) {
+        activityImage1.style.display = 'block';
+        activityImage2.style.display = 'none';
+    } else {
+        activityImage1.style.display = 'none';
+        activityImage2.style.display = 'block';
+    }
 });
+
+function showWaitingMessage(message) {
+    waitingMessage.textContent = message;
+    waitingOverlay.style.display = 'flex';
+    activityContent.style.opacity = '0.5';
+}
+
+function hideWaitingMessage() {
+    waitingOverlay.style.display = 'none';
+    activityContent.style.opacity = '1';
+}
 
 function addMessageToChat(userId, message) {
     const messageElement = document.createElement('div');
@@ -145,7 +152,7 @@ submitButton.addEventListener('click', () => {
         console.log('Respuesta final:', answer);
         socket.emit('ready-for-next-activity', { roomId, answer });
         submitButton.disabled = true;
-        readyMessage.style.display = 'block';
+        showWaitingMessage('Esperando a que tu compañero esté listo...');
     } else {
         alert('Por favor, escribe una respuesta antes de enviar.');
     }
@@ -153,21 +160,19 @@ submitButton.addEventListener('click', () => {
 
 socket.on('all-ready-next-activity', (data) => {
     console.log('Todos listos para la siguiente actividad');
-    readyMessage.textContent = 'Tu compañero está listo. Pasando a la siguiente actividad...';
+    showWaitingMessage('Tu compañero está listo. Preparando la siguiente actividad...');
     setTimeout(() => {
-        window.location.href = data.nextActivityUrl;
-    }, 3000); // Espera 3 segundos antes de redirigir
+        console.log('Redirigiendo a:', data.loadingUrl);
+        window.location.href = data.loadingUrl;
+    }, 1000);
 });
 
 socket.on('partner-disconnected', () => {
-    waitingMessage.textContent = 'Tu compañero se ha desconectado. Esperando reconexión...';
-    waitingMessage.style.display = 'block';
-    activityContent.style.display = 'none';
+    showWaitingMessage('Tu compañero se ha desconectado. Esperando reconexión...');
 });
 
 socket.on('partner-reconnected', () => {
-    waitingMessage.style.display = 'none';
-    activityContent.style.display = 'block';
+    hideWaitingMessage();
 });
 
 socket.on('room-not-available', () => {
