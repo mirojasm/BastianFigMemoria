@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model chats_colaborativos {
+  id                     Int                   @id @default(autoincrement())
+  pareja_colaboracion_id Int?
+  pregunta_id            Int?
+  parejas_colaboracion   parejas_colaboracion? @relation(fields: [pareja_colaboracion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chats_colaborativos_ibfk_1")
+  preguntas              preguntas?            @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chats_colaborativos_ibfk_2")
+  mensajes_chat          mensajes_chat[]
+
+  @@index([pareja_colaboracion_id], map: "pareja_colaboracion_id")
+  @@index([pregunta_id], map: "pregunta_id")
+}
+
+model mensajes_chat {
+  id                   Int                  @id @default(autoincrement())
+  chat_colaborativo_id Int?
+  usuario_id           Int?
+  contenido            String?              @db.Text
+  timestamp            DateTime?            @db.Timestamp(0)
+  chats_colaborativos  chats_colaborativos? @relation(fields: [chat_colaborativo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mensajes_chat_ibfk_1")
+  usuarios             usuarios?            @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mensajes_chat_ibfk_2")
+
+  @@index([chat_colaborativo_id], map: "chat_colaborativo_id")
+  @@index([usuario_id], map: "usuario_id")
+}
+
+model parejas_colaboracion {
+  id                                                  Int                   @id @default(autoincrement())
+  usuario1_id                                         Int?
+  usuario2_id                                         Int?
+  chats_colaborativos                                 chats_colaborativos[]
+  usuarios_parejas_colaboracion_usuario1_idTousuarios usuarios?             @relation("parejas_colaboracion_usuario1_idTousuarios", fields: [usuario1_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parejas_colaboracion_ibfk_1")
+  usuarios_parejas_colaboracion_usuario2_idTousuarios usuarios?             @relation("parejas_colaboracion_usuario2_idTousuarios", fields: [usuario2_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parejas_colaboracion_ibfk_2")
+  respuestas_finales                                  respuestas_finales[]
+
+  @@index([usuario1_id], map: "usuario1_id")
+  @@index([usuario2_id], map: "usuario2_id")
+}
+
+model preguntas {
+  id                  Int                   @id @default(autoincrement())
+  texto               String?               @db.Text
+  imagen_url          String?               @db.VarChar(255)
+  orden               Int?
+  nivel               Int?
+  chats_colaborativos chats_colaborativos[]
+  respuestas_finales  respuestas_finales[]
+}
+
+model respuestas_finales {
+  id                     Int                   @id @default(autoincrement())
+  pareja_colaboracion_id Int?
+  pregunta_id            Int?
+  respuesta_final        String?               @db.Text
+  timestamp              DateTime?             @db.Timestamp(0)
+  parejas_colaboracion   parejas_colaboracion? @relation(fields: [pareja_colaboracion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_finales_ibfk_2")
+  preguntas              preguntas?            @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_finales_ibfk_3")
+
+  @@index([pareja_colaboracion_id], map: "pareja_colaboracion_id")
+  @@index([pregunta_id], map: "pregunta_id")
+}
+
+model usuarios {
+  id                                                              Int                    @id @default(autoincrement())
+  nombre                                                          String?                @db.VarChar(100)
+  email                                                           String?                @unique(map: "email") @db.VarChar(255)
+  curso                                                           Int?
+  contrasena                                                      String?                @db.VarChar(255)
+  establecimiento                                                 String?                @db.VarChar(255)
+  mensajes_chat                                                   mensajes_chat[]
+  parejas_colaboracion_parejas_colaboracion_usuario1_idTousuarios parejas_colaboracion[] @relation("parejas_colaboracion_usuario1_idTousuarios")
+  parejas_colaboracion_parejas_colaboracion_usuario2_idTousuarios parejas_colaboracion[] @relation("parejas_colaboracion_usuario2_idTousuarios")
+}

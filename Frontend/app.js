@@ -4,6 +4,28 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
+const getUsuarios = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/usuarios', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const usuarios = await response.json();
+      console.log('Usuarios obtenidos:', usuarios);
+      return usuarios;
+    } catch (error) {
+      console.error('Error al obtener usuarios:', error);
+      throw error;
+    }
+  };
+
 // Setear los datos para capturar los datos de los formularios
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());

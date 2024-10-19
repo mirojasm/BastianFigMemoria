@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="resources/css/styleniveles.css">
+    <title>Mi Aplicación</title>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <h2>Bienvenido, <span id="username">Usuario</span></h2>
+            <button id="cargarUsuarios">Cargar Usuarios</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="levels-container">
+            <div class="level-card">
+                <h3>Nivel 1</h3>
+                <img src="resources/images/nivel1.png" alt="Nivel 1" class="level-image">
+                <p>Descripción del nivel 1</p>
+                <a href="/actividad/seleccionar-sala" class="button">Ingresar</a>
+            </div>
+            <div class="level-card">
+                <h3>Nivel 2</h3>
+                <img src="resources/images/nivel2.png" alt="Nivel 2" class="level-image">
+                <p>Descripción del nivel 2</p>
+                <button>Ingresar</button>
+            </div>
+            <div class="level-card">
+                <h3>Nivel 3</h3>
+                <img src="resources/images/nivel3.png" alt="Nivel 3" class="level-image">
+                <p>Descripción del nivel 3</p>
+                <button>Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Script iniciado');
+
+        const getUsuarios = async () => {
+            console.log('Iniciando getUsuarios');
+            try {
+                console.log('Haciendo fetch a http://localhost:3001/api/usuarios');
+                const response = await fetch('http://localhost:3001/api/usuarios', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors' // Explícitamente establecer modo CORS
+                });
+
+                console.log('Respuesta recibida:', response);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const usuarios = await response.json();
+                console.log('Usuarios obtenidos:', usuarios);
+                return usuarios;
+            } catch (error) {
+                console.error('Error en getUsuarios:', error);
+                throw error;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded evento disparado');
+
+            const username = "Juan Pérez";
+            document.getElementById('username').textContent = username;
+
+            document.getElementById('cargarUsuarios').addEventListener('click', () => {
+                console.log('Botón cargarUsuarios clickeado');
+                getUsuarios()
+                    .then(usuarios => {
+                        console.log('Datos de usuarios recibidos:', usuarios);
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar usuarios:', error);
+                    });
+            });
+        });
+    </script>
+
+</body>
+</html>
