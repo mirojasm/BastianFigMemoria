@@ -10,7 +10,7 @@
 
     <nav class="navbar">
         <div class="navbar-content">
-            <h2>Bienvenido, <span id="username">Usuario</span></h2>
+            <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
             <button id="cargarUsuarios">Cargar Usuarios</button>
         </div>
     </nav>
@@ -40,25 +40,53 @@
 
     <script>
         console.log('Script iniciado');
+    
+        // Función para obtener la información del usuario del localStorage
+        const getUserInfo = () => {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        };
+    
+        // Función para mostrar la información del usuario en el navbar
+        const displayUserInfo = () => {
+            const userInfoString = localStorage.getItem('userInfo');
+            console.log('UserInfo en localStorage:', userInfoString);
+            if (userInfoString) {
+                const userInfo = JSON.parse(userInfoString);
+                console.log('UserInfo parseado:', userInfo);
 
+                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+            } else {
+                console.log('No se encontró información del usuario en localStorage');
+            }
+            const userInfo = getUserInfo();
+            if (userInfo) {
+                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+            }
+        };
+    
         const getUsuarios = async () => {
             console.log('Iniciando getUsuarios');
             try {
+                const token = localStorage.getItem('token'); // Obtener el token de autenticación
                 console.log('Haciendo fetch a http://localhost:3001/api/usuarios');
                 const response = await fetch('http://localhost:3001/api/usuarios', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // Incluir el token en el header
                     },
-                    mode: 'cors' // Explícitamente establecer modo CORS
+                    mode: 'cors'
                 });
-
+    
                 console.log('Respuesta recibida:', response);
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+    
                 const usuarios = await response.json();
                 console.log('Usuarios obtenidos:', usuarios);
                 return usuarios;
@@ -67,13 +95,13 @@
                 throw error;
             }
         };
-
+    
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOMContentLoaded evento disparado');
-
-            const username = "Juan Pérez";
-            document.getElementById('username').textContent = username;
-
+    
+            // Mostrar la información del usuario al cargar la página
+            displayUserInfo();
+    
             document.getElementById('cargarUsuarios').addEventListener('click', () => {
                 console.log('Botón cargarUsuarios clickeado');
                 getUsuarios()

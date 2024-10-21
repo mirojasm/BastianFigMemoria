@@ -1,30 +1,70 @@
-
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=enge">
-        <meta name="viewport" content="widt=device-width, initial-scale=1.0">
-        <title>Ingreso de Estudiantes</title>
-        <link rel="stylesheet" href="resources/css/stylelogin.css">
-    </head>
-    <body>
-        <div class="main-container">
-            <div class="image-container">
-                <img src="./resources/images/logotesis.png" alt="Imagen educativa">
-            </div>
-            <div class="login-container">
-                <div class="login-form">
-                    <h2><i class="fas fa-graduation-cap"></i> Ingreso al Aula Virtual</h2>
-                    <form action="auth" method="POST">
-                        <input type="text" name="user" id="user" placeholder="Ingresa tu usuario" required>
-                        <input type="text" name="establecimiento" id="establecimiento" placeholder="Ingresa tu colegio" required>
-                        <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
-                        <input type="submit" class="btn-login" value="Login">
-                    </form>
-                </div>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso de Estudiantes</title>
+    <link rel="stylesheet" href="resources/css/stylelogin.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="image-container">
+            <img src="./resources/images/logotesis.png" alt="Imagen educativa">
+        </div>
+        <div class="login-container">
+            <div class="login-form">
+                <h2><i class="fas fa-graduation-cap"></i> Ingreso al Aula Virtual</h2>
+                <form id="loginForm">
+                    <input type="text" name="user" id="user" placeholder="Ingresa tu usuario" required>
+                    <input type="text" name="establecimiento" id="establecimiento" placeholder="Ingresa tu colegio" required>
+                    <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
+                    <input type="submit" class="btn-login" value="Login">
+                </form>
             </div>
         </div>
-    </body>
-    
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('user').value;
+            const establecimiento = document.getElementById('establecimiento').value;
+            const pass = document.getElementById('pass').value;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ user, establecimiento, pass }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Guarda el token en localStorage o sessionStorage
+                    localStorage.setItem('token', data.token);
+                    // Guardar la información del usuario
+                    localStorage.setItem('userInfo', JSON.stringify({
+                        nombre: data.nombre,
+                        establecimiento: data.establecimiento
+                    }));
+                    console.log('Información guardada en localStorage:', {
+                        token: localStorage.getItem('token').substring(0, 20) + '...',
+                        userInfo: localStorage.getItem('userInfo')
+                    });
+                    // Redirige al usuario a la página de niveles
+                    window.location.href = '/levels';
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.message || 'Error en la autenticación');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error en la conexión');
+            }
+        });
+    </script>
+</body>
 </html>
