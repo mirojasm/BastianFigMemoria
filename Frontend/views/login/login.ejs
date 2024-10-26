@@ -47,6 +47,7 @@
                     localStorage.setItem('token', data.token);
                     // Guardar la información del usuario
                     localStorage.setItem('userInfo', JSON.stringify({
+                        id: data.id,
                         nombre: data.nombre,
                         establecimiento: data.establecimiento
                     }));

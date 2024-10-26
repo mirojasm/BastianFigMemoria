@@ -36,6 +36,7 @@ model parejas_colaboracion {
   id                                                  Int                   @id @default(autoincrement())
   usuario1_id                                         Int?
   usuario2_id                                         Int?
+  room_id                                             String?               @db.VarChar(255)
   chats_colaborativos                                 chats_colaborativos[]
   usuarios_parejas_colaboracion_usuario1_idTousuarios usuarios?             @relation("parejas_colaboracion_usuario1_idTousuarios", fields: [usuario1_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parejas_colaboracion_ibfk_1")
   usuarios_parejas_colaboracion_usuario2_idTousuarios usuarios?             @relation("parejas_colaboracion_usuario2_idTousuarios", fields: [usuario2_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parejas_colaboracion_ibfk_2")

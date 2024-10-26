@@ -1,183 +1,193 @@
-// Invocar a express
-const express = require('express');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+// Importaciones ES modules
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+import session from 'express-session';
+// En app.js del frontend, cambia la línea de importación
+import { crearPareja, guardarMensaje, guardarRespuesta } from '../Backend/src/services/colaboracionService.js';
 
-const getUsuarios = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/usuarios', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const usuarios = await response.json();
-      console.log('Usuarios obtenidos:', usuarios);
-      return usuarios;
-    } catch (error) {
-      console.error('Error al obtener usuarios:', error);
-      throw error;
-    }
-  };
+// Configuración de __dirname para ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Crear aplicación express y servidor
+const app = express();
+const http = createServer(app);
+const io = new Server(http);
 
 // Setear los datos para capturar los datos de los formularios
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
-// Invocar a dotenv variables de entorno
-const dotenv = require('dotenv');
+// Configurar dotenv
 dotenv.config({path:'./env/.env'});
 
 // Directorio public
 app.use('/resources', express.static('public'));
-app.use('/resources', express.static(__dirname + '/public'));
+app.use('/resources', express.static(join(__dirname, 'public')));
 console.log(__dirname);
 
 // Configuración específica para Socket.IO
-app.use('/socket.io', express.static(__dirname + '/node_modules/socket.io/client-dist'));
+app.use('/socket.io', express.static(join(__dirname, 'node_modules/socket.io/client-dist')));
 
 // Motor de plantillas 
 app.set('view engine', 'ejs');
 
-// Invocamos a bcryptjs
-const bcryptjs = require('bcryptjs');
-
 // Variables de session
-const session = require('express-session');
 app.use(session({
     secret:'secret',
     resave:true,
     saveUninitialized:true
 }));
 
-// Rutas
-app.get('/',(req,res)=>{
-    res.render('login/login')
-})
-
-app.get('/login',(req,res)=>{
-    res.render('login/login')
-})
-
-app.get('/levels',(req,res)=>{
-    res.render('levels/niveles')
-})
-
-// Nueva ruta para la página de selección de sala
-app.get('/seleccionar-sala', (req, res) => {
-    res.render('actividad/seleccionar-sala');
-});
-
-// Nueva ruta para la página de carga
-app.get('/loading/:roomId', (req, res) => {
-    const roomId = req.params.roomId;
-    res.render('loading/loading', { roomId: roomId });
-});
-
-// Nueva ruta para manejar la redirección después de la carga
-app.get('/redirect-to-activity/:roomId', (req, res) => {
-    const roomId = req.params.roomId;
-    if (rooms[roomId] && rooms[roomId].size <= 2) {
-        res.json({ nextActivityUrl: `/actividad2/${roomId}` });
-    } else {
-        res.json({ nextActivityUrl: '/seleccionar-sala' });
-    }
-});
-
-// Objeto para almacenar las salas y sus participantes
+// Almacenamiento en memoria
 const rooms = {};
 const connectedUsers = new Map();
 const currentActivity = {};
 const readyUsers = {};
-const userImages = new Map(); // Para almacenar la asignación de imágenes
+const userImages = new Map();
 
-// Función para obtener el número de participantes en una sala
-function getRoomParticipants(roomId) {
-    return rooms[roomId] ? rooms[roomId].size : 0;
-}
-
-// Ruta para la primera actividad colaborativa
-app.get('/actividad/:roomId', (req, res) => {
-    const roomId = req.params.roomId;
-    if (rooms[roomId] && rooms[roomId].size <= 2) {
-        res.render('actividad/actividad', { roomId: roomId });
-    } else {
-        res.redirect('/seleccionar-sala');
-    }
-});
-
-// Nueva ruta para la segunda actividad
-app.get('/actividad2/:roomId', (req, res) => {
-    const roomId = req.params.roomId;
-    if (rooms[roomId] && rooms[roomId].size <= 2) {
-        res.render('actividad/actividad2', { roomId: roomId });
-    } else {
-        res.redirect('/seleccionar-sala');
-    }
-});
-
-// Lógica de Socket.IO para las actividades colaborativas
-io.on('connection', (socket) => {
+// Configuración de Socket.IO
+io.on('connection', async (socket) => {
     console.log('Un usuario se ha conectado', socket.id);
-    connectedUsers.set(socket.id, { room: null, userId: socket.id });
+
+    // Vamos a hacer debug de la información que llega
+    // aca vamos a modificar cosas con el claude.ia... a las 2.51
+    console.log('Auth info recibida:', socket.handshake.auth);
+    const userInfo = socket.handshake.auth.userInfo;
+    const authInfo = socket.handshake.auth;
+    let userData = null;
+
+    if (!authInfo || !authInfo.token || !authInfo.userInfo) {
+        console.log('Conexión sin autenticación válida');
+        socket.emit('auth_error', { message: 'No se proporcionó información de autenticación' });
+        return;
+    }
+
+    try {
+        userData = typeof authInfo.userInfo === 'string' 
+            ? JSON.parse(authInfo.userInfo) 
+            : authInfo.userInfo;
+
+        if (!userData || !userData.id) {
+            console.log('Información de usuario inválida');
+            socket.emit('auth_error', { message: 'Información de usuario inválida' });
+            return;
+        }
+
+        // Guardar información del usuario
+        connectedUsers.set(socket.id, {
+            room: null,
+            userId: parseInt(userData.id),
+            nombre: userData.nombre || 'Usuario Anónimo',
+            establecimiento: userData.establecimiento
+        });
+
+        console.log('Usuario autenticado correctamente:', {
+            socketId: socket.id,
+            userId: userData.id,
+            nombre: userData.nombre
+        });
+
+    } catch (error) {
+        console.error('Error al procesar la información del usuario:', error);
+        socket.emit('auth_error', { message: 'Error al procesar la información de usuario' });
+        return;
+    }
     
+
+    // Guardar la información del usuario
+    connectedUsers.set(socket.id, {
+        room: null,
+        userId: userData?.id || null,  // Cambiado de socket.id a null
+        nombre: userData?.nombre || 'Usuario Anónimo',
+        establecimiento: userData?.establecimiento
+    });
+
     socket.on('create-room', () => {
         const roomId = Math.random().toString(36).substring(7);
-        rooms[roomId] = new Set([socket.id]);
+        rooms[roomId] = {
+            users: new Set([socket.id]),
+            collaborationId: null
+        };
         socket.join(roomId);
         connectedUsers.get(socket.id).room = roomId;
-        userImages.set(socket.id, 1); // Asignar imagen 1 al creador de la sala
-        console.log(`Sala creada: ${roomId}, Participantes: ${getRoomParticipants(roomId)}`);
+        userImages.set(socket.id, 1);
+        console.log(`Sala creada: ${roomId}`);
         socket.emit('room-created', roomId);
     });
 
-    socket.on('join-room', (roomId) => {
+    // Modificar el evento join-room
+    socket.on('join-room', async (roomId) => {
         console.log(`Intento de unirse a la sala: ${roomId}`);
-        if (rooms[roomId] && rooms[roomId].size < 2) {
-            rooms[roomId].add(socket.id);
+        
+        const userInfo = connectedUsers.get(socket.id);
+        if (!userInfo.userId) {
+            socket.emit('error', { message: 'Usuario no autenticado' });
+            return;
+        }
+
+        if (rooms[roomId] && rooms[roomId].users.size < 2) {
+            rooms[roomId].users.add(socket.id);
             socket.join(roomId);
             connectedUsers.get(socket.id).room = roomId;
-            userImages.set(socket.id, rooms[roomId].size); // Asignar imagen 1 o 2 según el orden de unión
-            console.log(`Usuario ${socket.id} unido a la sala ${roomId}. Participantes: ${getRoomParticipants(roomId)}`);
-            
-            if (rooms[roomId].size === 1) {
-                socket.emit('waiting-for-partner', roomId);
-            } else if (rooms[roomId].size === 2) {
-                console.log(`Actividad lista para iniciar en la sala ${roomId}`);
-                if (currentActivity[roomId] === 1 || !currentActivity[roomId]) {
-                    io.to(roomId).emit('activity-ready', roomId);
-                } else {
-                    io.to(roomId).emit('second-activity-ready', roomId);
+            userImages.set(socket.id, rooms[roomId].users.size);
+
+            if (rooms[roomId].users.size === 2) {
+                const users = Array.from(rooms[roomId].users)
+                    .map(id => connectedUsers.get(id))
+                    .filter(user => user && user.userId);
+
+                if (users.length === 2) {
+                    try {
+                        const collaboration = await crearPareja(
+                            users[0].userId,
+                            users[1].userId,
+                            roomId
+                        );
+
+                        if (collaboration) {
+                            rooms[roomId].collaborationId = collaboration.id;
+                            io.to(roomId).emit('activity-ready', roomId);
+                        } else {
+                            socket.emit('error', { message: 'Error al establecer la colaboración' });
+                        }
+                    } catch (error) {
+                        console.error('Error al crear pareja:', error);
+                        socket.emit('error', { message: 'Error al crear la pareja de colaboración' });
+                    }
                 }
+            } else {
+                socket.emit('waiting-for-partner', roomId);
             }
         } else {
-            console.log(`Sala ${roomId} llena o no existe. Participantes actuales: ${getRoomParticipants(roomId)}`);
             socket.emit('room-full');
         }
     });
 
-    socket.on('start-activity', (roomId) => {
-        if (rooms[roomId] && rooms[roomId].size === 2) {
-            console.log(`Actividad iniciada en la sala ${roomId}`);
-            currentActivity[roomId] = currentActivity[roomId] || 1; // Iniciar con la primera actividad si no está definida
-            rooms[roomId].forEach(userId => {
-                const imageNumber = userImages.get(userId);
-                io.to(userId).emit('activity-started', { imageNumber });
-            });
-        }
-    });
+    socket.on('chat-message', async (data) => {
+        const userInfo = connectedUsers.get(socket.id);
+        const roomId = userInfo.room;
 
-    socket.on('chat-message', (data) => {
-        const roomId = connectedUsers.get(socket.id).room;
-        if (roomId) {
-            console.log(`Mensaje recibido de ${socket.id} en sala ${roomId}: ${data.message}`);
-            socket.to(roomId).emit('chat-message', { userId: socket.id, message: data.message });
+        if (roomId && rooms[roomId]) {
+            console.log(`Mensaje recibido de ${userInfo.nombre} en sala ${roomId}`);
+            
+            if (rooms[roomId].collaborationId) {
+                await guardarMensaje(
+                    rooms[roomId].collaborationId,
+                    userInfo.userId,
+                    data.message
+                );
+            }
+
+            socket.to(roomId).emit('chat-message', {
+                userId: socket.id,
+                userName: userInfo.nombre,
+                message: data.message
+            });
         }
     });
 
@@ -191,8 +201,9 @@ io.on('connection', (socket) => {
         socket.to(roomId).emit('stop-typing');
     });
 
-    socket.on('ready-for-next-activity', (data) => {
+    socket.on('ready-for-next-activity', async (data) => {
         const roomId = data.roomId;
+        const answer = data.answer;
         const userId = socket.id;
 
         if (!readyUsers[roomId]) {
@@ -202,11 +213,15 @@ io.on('connection', (socket) => {
         readyUsers[roomId].add(userId);
         console.log(`Usuario ${userId} listo en sala ${roomId}`);
 
-        // Aquí puedes agregar lógica para guardar la respuesta en una base de datos si es necesario
+        if (readyUsers[roomId].size === rooms[roomId].users.size) {
+            if (rooms[roomId].collaborationId) {
+                await guardarRespuesta(
+                    rooms[roomId].collaborationId,
+                    1, // ID de la pregunta actual
+                    answer
+                );
+            }
 
-        if (readyUsers[roomId].size === rooms[roomId].size) {
-            console.log(`Todos los usuarios en la sala ${roomId} están listos`);
-            
             if (!currentActivity[roomId]) {
                 currentActivity[roomId] = 1;
             }
@@ -219,28 +234,7 @@ io.on('connection', (socket) => {
                 io.to(roomId).emit('all-activities-completed');
             }
 
-            // Limpiar el conjunto de usuarios listos para esta sala
             delete readyUsers[roomId];
-        }
-    });
-
-    socket.on('update-final-answer', (data) => {
-        const roomId = connectedUsers.get(socket.id).room;
-        if (roomId) {
-            console.log(`Actualización de respuesta final recibida de ${socket.id} en sala ${roomId}`);
-            io.to(roomId).emit('final-answer-updated', { 
-                content: data.content, 
-                cursorPosition: data.cursorPosition,
-                userId: socket.id
-            });
-        }
-    });
-
-    socket.on('editing-final-answer', (data) => {
-        const roomId = connectedUsers.get(socket.id).room;
-        if (roomId) {
-            console.log(`Usuario ${socket.id} ${data.isEditing ? 'está editando' : 'dejó de editar'} la respuesta final en sala ${roomId}`);
-            socket.to(roomId).emit('partner-editing-final-answer', data.isEditing);
         }
     });
 
@@ -250,55 +244,72 @@ io.on('connection', (socket) => {
         if (userInfo && userInfo.room) {
             const roomId = userInfo.room;
             if (rooms[roomId]) {
-                rooms[roomId].delete(socket.id);
+                rooms[roomId].users.delete(socket.id);
                 userImages.delete(socket.id);
-                console.log(`Usuario removido de la sala ${roomId}. Participantes restantes: ${getRoomParticipants(roomId)}`);
-                if (rooms[roomId].size > 0) {
+                if (rooms[roomId].users.size > 0) {
                     socket.to(roomId).emit('partner-disconnected');
                 }
             }
         }
         connectedUsers.delete(socket.id);
-
-        // Eliminar al usuario de la lista de listos si se desconecta
-        Object.keys(readyUsers).forEach(roomId => {
-            if (readyUsers[roomId] && readyUsers[roomId].has(socket.id)) {
-                readyUsers[roomId].delete(socket.id);
-                console.log(`Usuario ${socket.id} eliminado de la lista de listos en la sala ${roomId}`);
-            }
-        });
     });
 
     socket.on('reconnect-to-room', (roomId) => {
-        if (rooms[roomId] && rooms[roomId].size < 2) {
-            rooms[roomId].add(socket.id);
+        if (rooms[roomId] && rooms[roomId].users.size < 2) {
+            rooms[roomId].users.add(socket.id);
             socket.join(roomId);
             connectedUsers.get(socket.id).room = roomId;
-            userImages.set(socket.id, rooms[roomId].size);
-            console.log(`Usuario ${socket.id} reconectado a la sala ${roomId}. Participantes: ${getRoomParticipants(roomId)}`);
+            userImages.set(socket.id, rooms[roomId].users.size);
             io.to(roomId).emit('partner-reconnected');
         } else {
             socket.emit('room-not-available');
         }
     });
-
-    socket.on('check-room', (roomId) => {
-        const participants = getRoomParticipants(roomId);
-        console.log(`Verificación de sala ${roomId}: ${participants} participantes`);
-        socket.emit('room-status', { roomId, participants, exists: !!rooms[roomId] });
-    });
-
-    socket.on('heartbeat', (roomId) => {
-        console.log(`Heartbeat recibido de ${socket.id} en la sala ${roomId}`);
-    });
 });
 
-// Configuración adicional de Socket.IO
-io.engine.on("connection_error", (err) => {
-    console.log(`Connection error: ${err.message}`);
+// Rutas
+app.get('/', (req, res) => {
+    res.render('login/login');
 });
 
-// Cambiar app.listen por http.listen
+app.get('/login', (req, res) => {
+    res.render('login/login');
+});
+
+app.get('/levels', (req, res) => {
+    res.render('levels/niveles');
+});
+
+app.get('/seleccionar-sala', (req, res) => {
+    res.render('actividad/seleccionar-sala');
+});
+
+app.get('/loading/:roomId', (req, res) => {
+    const roomId = req.params.roomId;
+    res.render('loading/loading', { roomId: roomId });
+});
+
+app.get('/actividad/:roomId', (req, res) => {
+    const roomId = req.params.roomId;
+    if (rooms[roomId] && rooms[roomId].users.size <= 2) {
+        res.render('actividad/actividad', { roomId: roomId });
+    } else {
+        res.redirect('/seleccionar-sala');
+    }
+});
+
+app.get('/actividad2/:roomId', (req, res) => {
+    const roomId = req.params.roomId;
+    if (rooms[roomId] && rooms[roomId].users.size <= 2) {
+        res.render('actividad/actividad2', { roomId: roomId });
+    } else {
+        res.redirect('/seleccionar-sala');
+    }
+});
+
+// Puerto de escucha
 http.listen(3000, () => {
-    console.log('Servidor ya escuchando en el 3000 http://localhost:3000');
+    console.log('Servidor escuchando en http://localhost:3000');
 });
+
+export default app;

@@ -48,13 +48,15 @@ router.post('/login', async (req, res) => {
     console.log('Respuesta enviada:', {
         token: token.substring(0, 20) + '...', // Solo mostrar parte del token por seguridad
         nombre: usuario.nombre,
-        establecimiento: usuario.establecimiento
+        establecimiento: usuario.establecimiento,
+        id: usuario.id,
       });
 
     res.json({
       token,
       nombre: usuario.nombre,
-      establecimiento: usuario.establecimiento
+      establecimiento: usuario.establecimiento,
+      id: usuario.id
     });
 
   } catch (error) {

@@ -1,4 +1,11 @@
-const socket = io();
+const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+const token = localStorage.getItem('token');
+const socket = io({
+    auth: {
+        token: token,
+        userInfo
+    }
+});
 
 const roomId = document.getElementById('room-id').textContent;
 const waitingOverlay = document.getElementById('waiting-overlay');
@@ -76,23 +83,24 @@ function hideWaitingMessage() {
     activityContent.style.opacity = '1';
 }
 
-function addMessageToChat(userId, message) {
+// Modificar la función addMessageToChat para mostrar los nombres
+function addMessageToChat(data) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('chat-message');
     
     const authorElement = document.createElement('div');
     authorElement.classList.add('message-author');
     
-    if (userId === myUserId) {
+    if (data.userId === socket.id) {
         messageElement.classList.add('own-message');
-        authorElement.textContent = 'Tú';
+        authorElement.textContent = userInfo.nombre || 'Tú';
     } else {
         messageElement.classList.add('partner-message');
-        authorElement.textContent = 'Compañero';
+        authorElement.textContent = data.userName || 'Compañero';
     }
     
     const contentElement = document.createElement('div');
-    contentElement.textContent = message;
+    contentElement.textContent = data.message;
     
     messageElement.appendChild(authorElement);
     messageElement.appendChild(contentElement);
@@ -135,7 +143,7 @@ chatInput.addEventListener('keypress', (e) => {
 });
 
 socket.on('chat-message', (data) => {
-    addMessageToChat(data.userId, data.message);
+    addMessageToChat(data);
 });
 
 socket.on('typing', () => {
