@@ -52,10 +52,33 @@ socket.on('waiting-for-partner', () => {
 });
 
 socket.on('activity-ready', () => {
+    console.log('Actividad lista para comenzar');
     showWaitingMessage('¡Compañero encontrado! La actividad comenzará en breve...');
     setTimeout(() => {
-        socket.emit('start-activity', roomId);
+        hideWaitingMessage();
+        initializeActivity();
     }, 3000);
+});
+function initializeActivity() {
+    console.log('Inicializando actividad');
+    // Mostrar el contenido de la actividad
+    activityContent.style.display = 'flex';
+    document.querySelector('.activity-info').style.display = 'block';
+    document.querySelector('.image-container').style.display = 'block';
+    
+    // Determinar qué imagen mostrar basado en el orden de conexión
+    socket.emit('get-user-number', roomId);
+}
+
+socket.on('user-number', (number) => {
+    console.log('Recibido número de usuario:', number);
+    if (number === 1) {
+        activityImage1.style.display = 'block';
+        activityImage2.style.display = 'none';
+    } else {
+        activityImage1.style.display = 'none';
+        activityImage2.style.display = 'block';
+    }
 });
 
 socket.on('activity-started', (data) => {
@@ -235,27 +258,61 @@ window.addEventListener('resize', scrollChatToBottom);
 
 // Código para edición colaborativa
 let isEditingFinalAnswer = false;
+let lastContent = '';
+let updateTimeout = null;
 
-finalAnswer.addEventListener('input', () => {
+// Función para manejar cambios en el contenido
+function handleContentChange() {
     const content = finalAnswer.value;
     const cursorPosition = finalAnswer.selectionStart;
-    socket.emit('update-final-answer', { roomId, content, cursorPosition });
-});
+    
+    // Evitar actualizaciones innecesarias si el contenido no ha cambiado
+    if (content !== lastContent) {
+        lastContent = content;
+        
+        // Limpiar el timeout anterior si existe
+        if (updateTimeout) {
+            clearTimeout(updateTimeout);
+        }
+        
+        // Establecer un nuevo timeout para throttling
+        updateTimeout = setTimeout(() => {
+            socket.emit('update-final-answer', {
+                roomId,
+                content,
+                cursorPosition
+            });
+        }, 100); // Pequeño delay para evitar sobrecarga
+    }
+}
 
+// Eventos para el textarea
+finalAnswer.addEventListener('input', handleContentChange);
+finalAnswer.addEventListener('keyup', handleContentChange);
+finalAnswer.addEventListener('paste', handleContentChange);
 finalAnswer.addEventListener('focus', () => {
     isEditingFinalAnswer = true;
     socket.emit('editing-final-answer', { roomId, isEditing: true });
+    collaborativeEditingIndicator.style.display = 'none';
 });
 
 finalAnswer.addEventListener('blur', () => {
     isEditingFinalAnswer = false;
     socket.emit('editing-final-answer', { roomId, isEditing: false });
 });
-
+// Manejar las actualizaciones recibidas
 socket.on('final-answer-updated', ({ content, cursorPosition, userId }) => {
-    if (userId !== myUserId) {
+    if (userId !== socket.id) { // Solo actualizar si el cambio viene de otro usuario
+        const currentPosition = finalAnswer.selectionStart;
+        
+        // Guardar la posición actual del cursor
         const currentCursorPosition = finalAnswer.selectionStart;
+        
+        // Actualizar el contenido
         finalAnswer.value = content;
+        lastContent = content;
+        
+        // Restaurar la posición del cursor según el estado de edición
         if (!isEditingFinalAnswer) {
             finalAnswer.setSelectionRange(cursorPosition, cursorPosition);
         } else {
@@ -265,11 +322,11 @@ socket.on('final-answer-updated', ({ content, cursorPosition, userId }) => {
 });
 
 socket.on('partner-editing-final-answer', (isEditing) => {
-    if (isEditing) {
-        finalAnswer.style.border = '2px solid #ff9800';
+    if (isEditing && !isEditingFinalAnswer) {
         collaborativeEditingIndicator.style.display = 'block';
+        finalAnswer.style.border = '2px solid #ff9800';
     } else {
-        finalAnswer.style.border = '1px solid #3f87a6';
         collaborativeEditingIndicator.style.display = 'none';
+        finalAnswer.style.border = '1px solid #3f87a6';
     }
 });

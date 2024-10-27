@@ -332,6 +332,62 @@ h1 {
         font-size: 2vh;
         padding: 15px;
     }
+/* Estilos para la edición colaborativa */
+.final-answer-container {
+    position: relative;
+    margin: 20px 0;
 }
+
+#final-answer {
+    width: 100%;
+    min-height: 100px;
+    padding: 1vh;
+    border: 1px solid #3f87a6;
+    border-radius: 5px;
+    resize: vertical;
+    font-size: 1.8vh;
+    transition: all 0.3s ease;
+}
+
+#final-answer:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+#collaborative-editing-indicator {
+    display: none;
+    position: absolute;
+    top: -20px;
+    right: 0;
+    color: #ff9800;
+    font-size: 1.4vh;
+    font-style: italic;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 0.5vh 1vh;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estado de edición activa */
+#final-answer.partner-editing {
+    border: 2px solid #ff9800;
+    background-color: rgba(255, 152, 0, 0.05);
+}
+
+/* Estilos responsivos para la edición colaborativa */
+@media (max-width: 768px) {
+    #final-answer {
+        min-height: 80px;
+        font-size: 1.6vh;
+    }
+
+    #collaborative-editing-indicator {
+        font-size: 1.2vh;
+        top: -15px;
+    }
+}
+}
+
 
 

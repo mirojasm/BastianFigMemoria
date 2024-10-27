@@ -167,6 +167,32 @@ io.on('connection', async (socket) => {
             socket.emit('room-full');
         }
     });
+    socket.on('get-user-number', (roomId) => {
+        if (rooms[roomId] && rooms[roomId].users.has(socket.id)) {
+            const userNumber = userImages.get(socket.id);
+            socket.emit('user-number', userNumber);
+        }
+    });
+    // Manejar actualizaciones del texto de respuesta final
+    socket.on('update-final-answer', (data) => {
+        const roomId = data.roomId;
+        if (rooms[roomId]) {
+            // Emitir la actualización a todos los usuarios en la sala excepto al remitente
+            socket.to(roomId).emit('final-answer-updated', {
+                content: data.content,
+                cursorPosition: data.cursorPosition,
+                userId: socket.id
+            });
+        }
+    });
+
+    // Manejar el estado de edición
+    socket.on('editing-final-answer', (data) => {
+        const roomId = data.roomId;
+        if (rooms[roomId]) {
+            socket.to(roomId).emit('partner-editing-final-answer', data.isEditing);
+        }
+    });
 
     socket.on('chat-message', async (data) => {
         const userInfo = connectedUsers.get(socket.id);
