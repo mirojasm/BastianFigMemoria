@@ -70,21 +70,45 @@ socket.on('activity-started', (data) => {
         activityImage1.style.display = 'none';
         activityImage2.style.display = 'block';
     }
+    // Mostrar el contenido de la actividad
+    document.querySelector('.activity-info').style.display = 'block';
+    document.querySelector('.final-answer-container').style.display = 'block';
+    document.querySelector('.chat-sidebar').style.display = 'block';
 });
 
 function showWaitingMessage(message) {
     waitingMessage.textContent = message;
     waitingOverlay.style.display = 'flex';
-    activityContent.style.opacity = '0.5';
+    if (activityContent) {
+        activityContent.style.opacity = '0.5';
+    }
 }
 
 function hideWaitingMessage() {
     waitingOverlay.style.display = 'none';
-    activityContent.style.opacity = '1';
+    if (activityContent) {
+        activityContent.style.display = 'flex';
+        activityContent.style.opacity = '1';
+    }
 }
 
 // Modificar la función addMessageToChat para mostrar los nombres
 function addMessageToChat(data) {
+    // Verificar si el mensaje es duplicado considerando el contenido Y el autor
+    const existingMessages = chatMessages.querySelectorAll('.chat-message');
+    const isDuplicate = Array.from(existingMessages).some(msg => {
+        const content = msg.querySelector('.message-content').textContent;
+        const author = msg.querySelector('.message-author').textContent;
+        const currentAuthor = data.userId === socket.id ? 'Tú' : (data.userName || 'Compañero');
+        
+        return content === data.message && author === currentAuthor;
+    });
+
+    if (isDuplicate) {
+        console.log('Mensaje duplicado detectado, ignorando...');
+        return;
+    }
+
     const messageElement = document.createElement('div');
     messageElement.classList.add('chat-message');
     
@@ -93,15 +117,23 @@ function addMessageToChat(data) {
     
     if (data.userId === socket.id) {
         messageElement.classList.add('own-message');
-        authorElement.textContent = userInfo.nombre || 'Tú';
+        authorElement.textContent = 'Tú';
     } else {
         messageElement.classList.add('partner-message');
         authorElement.textContent = data.userName || 'Compañero';
     }
     
     const contentElement = document.createElement('div');
+    contentElement.classList.add('message-content');
     contentElement.textContent = data.message;
-    
+    // Agregar timestamp al mensaje
+    const timestampElement = document.createElement('div');
+    timestampElement.classList.add('message-timestamp');
+    const messageTime = new Date().toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    timestampElement.textContent = messageTime;
     messageElement.appendChild(authorElement);
     messageElement.appendChild(contentElement);
     
@@ -116,8 +148,8 @@ function scrollChatToBottom() {
 function sendMessage() {
     const message = chatInput.value.trim();
     if (message) {
-        socket.emit('chat-message', { roomId, message });
-        addMessageToChat(myUserId, message);
+        socket.emit('chat-message', { roomId, message, timestamp: new Date().toISOString() });
+        
         chatInput.value = '';
         chatInput.focus();
         socket.emit('stop-typing', { roomId });
@@ -141,8 +173,11 @@ chatInput.addEventListener('keypress', (e) => {
         sendMessage();
     }
 });
+// Remover cualquier listener existente para evitar duplicados
+socket.off('chat-message');
 
 socket.on('chat-message', (data) => {
+    console.log('Mensaje recibido:', data); // Para debug
     addMessageToChat(data);
 });
 

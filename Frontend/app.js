@@ -176,18 +176,36 @@ io.on('connection', async (socket) => {
             console.log(`Mensaje recibido de ${userInfo.nombre} en sala ${roomId}`);
             
             if (rooms[roomId].collaborationId) {
-                await guardarMensaje(
-                    rooms[roomId].collaborationId,
-                    userInfo.userId,
-                    data.message
-                );
-            }
+                try{
+                    await guardarMensaje(
+                        rooms[roomId].collaborationId,
+                        userInfo.userId,
+                        data.message
+                    );
 
-            socket.to(roomId).emit('chat-message', {
+                } catch (error){
+                    console.error('Error al guardar mensaje:', error);
+                }
+                
+            }
+            // Crear el objeto del mensaje
+            const messageData = {
                 userId: socket.id,
                 userName: userInfo.nombre,
-                message: data.message
-            });
+                message: data.message,
+                timestamp: new Date().toISOString() // Opcional: agregar timestamp
+            };
+            // Emitir el mensaje a todos en la sala, incluido el emisor
+            io.to(roomId).emit('chat-message', messageData);
+            // Emitir el mensaje solo una vez a la sala
+            socket.to(roomId).emit('chat-message', messageData);
+            // Emitir de vuelta al remitente
+            socket.emit('chat-message', messageData);
+                socket.to(roomId).emit('chat-message', {
+                    userId: socket.id,
+                    userName: userInfo.nombre,
+                    message: data.message
+                });
         }
     });
 

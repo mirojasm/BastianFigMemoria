@@ -30,6 +30,15 @@ body {
     flex-direction: column;
     padding-right: 2vh;
     position: relative;
+    min-width: 0; /* Añadido para prevenir desbordamiento */
+}
+#activity-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0; /* Añadido para permitir que el contenido se ajuste */
+    overflow: auto; /* Permite scroll si el contenido es muy largo */
 }
 
 .chat-sidebar {
@@ -38,6 +47,8 @@ body {
     flex-direction: column;
     border-left: 1px solid #e0e0e0;
     padding-left: 2vh;
+    min-width: 250px; /* Añadido para asegurar un ancho mínimo */
+    max-width: 400px; /* Añadido para limitar el ancho máximo */
 }
 
 h1 {
@@ -98,10 +109,11 @@ h1 {
 .image-container {
     width: 100%;
     max-width: 500px; /* Ajusta este valor según tus necesidades */
-    margin: 0 auto;
+    margin: 2vh auto;
     aspect-ratio: 16 / 9; /* Mantiene una proporción de aspecto constante */
     overflow: hidden;
     position: relative;
+    flex-shrink: 0; /* Evita que la imagen se encoja */
 }
 
 #activity-image-1,
@@ -124,6 +136,7 @@ h1 {
     background-color: #f8f9fa;
     overflow: hidden;
     margin-bottom: 1vh;
+    min-height: 0; /* Añadido para permitir que el contenido se ajuste */
 }
 
 #chat-messages {
@@ -132,6 +145,7 @@ h1 {
     padding: 1vh;
     display: flex;
     flex-direction: column;
+    min-height: 200px; /* Añadido para asegurar una altura mínima */
 }
 
 .chat-message {
@@ -197,6 +211,7 @@ h1 {
 
 .final-answer-container {
     margin-top: 1vh;
+    padding: 2vh 0; /* Añadido padding vertical */
 }
 
 #final-answer {
@@ -318,4 +333,5 @@ h1 {
         padding: 15px;
     }
 }
+
 
