@@ -1,32 +1,27 @@
+<!-- Frontend/views/loading/loading.ejs -->
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargando siguiente actividad</title>
-    <link rel="stylesheet" href="/resources/css/styleloading.css">
-</head>
-<body>
-    <div class="loading-container">
-        <h1>Preparando la siguiente actividad</h1>
-        <div class="loading-spinner"></div>
-        <p>Por favor, espera un momento...</p>
-    </div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Cargando siguiente actividad</title>
+		<link rel="stylesheet" href="/resources/css/styleloading.css" />
+	</head>
+	<body>
+		<div class="loading-container">
+			<h1>Preparando la siguiente actividad</h1>
+			<div class="loading-spinner"></div>
+			<p>Por favor, espera un momento...</p>
+		</div>
 
-    <script>
-        setTimeout(() => {
-            fetch('/redirect-to-activity/<%= roomId %>')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Redirigiendo a:', data.nextActivityUrl);
-                    window.location.href = data.nextActivityUrl;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Hubo un error al cargar la siguiente actividad. Volviendo a la selección de sala.');
-                    window.location.href = '/seleccionar-sala';
-                });
-        }, 3000);
-    </script>
-</body>
+		<script>
+			const roomId = "<%= roomId %>";
+			console.log("Loading page, preparing to redirect to activity 2...");
+
+			setTimeout(() => {
+				console.log("Redirecting to activity 2...");
+				window.location.href = `/actividad2/${roomId}`;
+			}, 3000);
+		</script>
+	</body>
 </html>

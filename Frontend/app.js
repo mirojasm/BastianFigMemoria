@@ -237,53 +237,89 @@ io.on("connection", async (socket) => {
 		}
 
 		readyUsers[roomId].add(socket.id);
+		console.log(
+			`Usuario ${socket.id} listo en sala ${roomId}. Total listos: ${readyUsers[roomId].size}`
+		);
 
+		// Guardar la respuesta inmediatamente cuando el usuario la envía
+		if (rooms[roomId].collaborationId) {
+			try {
+				await colaboracionService.guardarRespuesta(
+					rooms[roomId].collaborationId,
+					1,
+					answer,
+					userInfo.token
+				);
+				console.log("Respuesta guardada exitosamente");
+			} catch (error) {
+				console.error("Error al guardar respuesta:", error);
+				socket.emit("error", {
+					message: "Error al guardar la respuesta",
+				});
+				return;
+			}
+		}
+
+		// Si todos los usuarios están listos
 		if (readyUsers[roomId].size === rooms[roomId].users.size) {
-			if (rooms[roomId].collaborationId) {
-				try {
-					console.log("Intentando guardar respuesta final:", {
-						collaborationId: rooms[roomId].collaborationId,
-						preguntaId: 1,
-						answer,
-					});
+			console.log("Todos los usuarios listos, iniciando transición...");
 
-					const respuesta =
-						await colaboracionService.guardarRespuesta(
-							rooms[roomId].collaborationId,
-							1, // ID de la pregunta actual
-							answer,
-							userInfo.token
-						);
+			if (!currentActivity[roomId]) {
+				currentActivity[roomId] = 1;
+			}
 
-					console.log("Respuesta guardada:", respuesta);
+			if (currentActivity[roomId] === 1) {
+				currentActivity[roomId] = 2;
 
-					if (!currentActivity[roomId]) {
-						currentActivity[roomId] = 1;
-					}
+				// Emitir evento para redirección
+				io.to(roomId).emit("start-activity-transition", {
+					nextActivity: 2,
+					roomId: roomId,
+				});
 
-					if (currentActivity[roomId] === 1) {
-						currentActivity[roomId] = 2;
-						const loadingUrl = `/loading/${roomId}`;
-						io.to(roomId).emit("all-ready-next-activity", {
-							loadingUrl,
-						});
-					} else {
-						io.to(roomId).emit("all-activities-completed");
-					}
-				} catch (error) {
-					console.error(
-						"Error al guardar la respuesta final:",
-						error
-					);
-					socket.emit("error", {
-						message: "Error al guardar la respuesta final",
-					});
-				}
+				console.log(`Transición iniciada para sala ${roomId}`);
+			} else {
+				io.to(roomId).emit("all-activities-completed");
 			}
 
 			delete readyUsers[roomId];
+		} else {
+			// Notificar a los demás usuarios que alguien está listo
+			socket.to(roomId).emit("user-ready", {
+				userId: socket.id,
+				readyCount: readyUsers[roomId].size,
+				totalNeeded: rooms[roomId].users.size,
+			});
 		}
 	});
+
+	// Añadir este nuevo evento para manejar la reconexión en actividad2
+	socket.on("reconnect-to-activity2", async (roomId) => {
+		try {
+			const userInfo = connectedUsers.get(socket.id);
+			if (!userInfo) {
+				socket.emit("error", { message: "Usuario no encontrado" });
+				return;
+			}
+
+			if (rooms[roomId]) {
+				socket.join(roomId);
+				userInfo.room = roomId;
+				io.to(roomId).emit("activity2-user-connected", {
+					userId: socket.id,
+					userName: userInfo.nombre,
+				});
+			} else {
+				socket.emit("room-not-available");
+			}
+		} catch (error) {
+			console.error("Error en reconnect-to-activity2:", error);
+			socket.emit("error", {
+				message: "Error al reconectar a la actividad 2",
+			});
+		}
+	});
+
 	socket.on("disconnect", (reason) => {
 		console.log(`Usuario desconectado: ${socket.id}, Razón: ${reason}`);
 		const userInfo = connectedUsers.get(socket.id);
@@ -346,9 +382,19 @@ app.get("/actividad/:roomId", (req, res) => {
 
 app.get("/actividad2/:roomId", (req, res) => {
 	const roomId = req.params.roomId;
-	if (rooms[roomId] && rooms[roomId].users.size <= 2) {
+	console.log(`Solicitud de actividad2 para sala ${roomId}`);
+
+	if (rooms[roomId]) {
+		console.log(`Estado de la sala ${roomId}:`, {
+			usersCount: rooms[roomId].users.size,
+			currentActivity: currentActivity[roomId],
+		});
+
+		// Permitir el acceso incluso si temporalmente no hay usuarios
+		// (podrían estar en proceso de reconexión)
 		res.render("actividad/actividad2", { roomId: roomId });
 	} else {
+		console.log(`Sala ${roomId} no encontrada`);
 		res.redirect("/seleccionar-sala");
 	}
 });
