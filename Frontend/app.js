@@ -40,6 +40,23 @@ const connectedUsers = new Map();
 const currentActivity = {};
 const readyUsers = {};
 const userImages = new Map();
+// Nuevo objeto para manejar el estado de las respuestas
+const userResponses = {};
+
+
+// Función auxiliar para manejar el estado de la sala
+const getRoomState = (roomId) => {
+    if (!rooms[roomId]) {
+        rooms[roomId] = {
+            users: new Set(),
+            collaborationId: null,
+            currentActivity: 1,
+            responses: new Map(), // Almacena las respuestas de los usuarios
+            bothUsersSubmitted: false
+        };
+    }
+    return rooms[roomId];
+};
 
 io.on("connection", async (socket) => {
 	console.log("Un usuario se ha conectado", socket.id);
@@ -227,98 +244,107 @@ io.on("connection", async (socket) => {
 		}
 	});
 
-	socket.on("ready-for-next-activity", async (data) => {
-		const userInfo = connectedUsers.get(socket.id);
-		const roomId = data.roomId;
-		const answer = data.answer;
+	// Modificar el evento ready-for-next-activity
+socket.on("ready-for-next-activity", async (data) => {
+    const userInfo = connectedUsers.get(socket.id);
+    const roomId = data.roomId;
+    const answer = data.answer;
+    const roomState = getRoomState(roomId);
 
-		if (!readyUsers[roomId]) {
-			readyUsers[roomId] = new Set();
-		}
+    // Guardar la respuesta del usuario actual
+    if (!userResponses[roomId]) {
+        userResponses[roomId] = new Map();
+    }
+    userResponses[roomId].set(socket.id, answer);
 
-		readyUsers[roomId].add(socket.id);
-		console.log(
-			`Usuario ${socket.id} listo en sala ${roomId}. Total listos: ${readyUsers[roomId].size}`
-		);
+    // Notificar al otro usuario que este usuario está listo
+    socket.to(roomId).emit("partner-ready", {
+        userId: socket.id,
+        userName: userInfo.nombre
+    });
 
-		// Guardar la respuesta inmediatamente cuando el usuario la envía
-		if (rooms[roomId].collaborationId) {
-			try {
-				await colaboracionService.guardarRespuesta(
-					rooms[roomId].collaborationId,
-					1,
-					answer,
-					userInfo.token
-				);
-				console.log("Respuesta guardada exitosamente");
-			} catch (error) {
-				console.error("Error al guardar respuesta:", error);
-				socket.emit("error", {
-					message: "Error al guardar la respuesta",
-				});
-				return;
-			}
-		}
+    // Guardar la respuesta en la base de datos
+    if (roomState.collaborationId) {
+        try {
+            await colaboracionService.guardarRespuesta(
+                roomState.collaborationId,
+                roomState.currentActivity,
+                answer,
+                userInfo.token
+            );
+            console.log("Respuesta guardada exitosamente");
+        } catch (error) {
+            console.error("Error al guardar respuesta:", error);
+            socket.emit("error", {
+                message: "Error al guardar la respuesta"
+            });
+            return;
+        }
+    }
 
-		// Si todos los usuarios están listos
-		if (readyUsers[roomId].size === rooms[roomId].users.size) {
-			console.log("Todos los usuarios listos, iniciando transición...");
+    // Verificar si ambos usuarios han enviado sus respuestas
+    if (userResponses[roomId].size === 2) {
+        roomState.bothUsersSubmitted = true;
+        roomState.currentActivity = 2;
 
-			if (!currentActivity[roomId]) {
-				currentActivity[roomId] = 1;
-			}
+        // Emitir evento para iniciar la transición
+        io.to(roomId).emit("start-activity-transition", {
+            nextActivity: 2,
+            roomId: roomId
+        });
 
-			if (currentActivity[roomId] === 1) {
-				currentActivity[roomId] = 2;
-
-				// Emitir evento para redirección
-				io.to(roomId).emit("start-activity-transition", {
-					nextActivity: 2,
-					roomId: roomId,
-				});
-
-				console.log(`Transición iniciada para sala ${roomId}`);
-			} else {
-				io.to(roomId).emit("all-activities-completed");
-			}
-
-			delete readyUsers[roomId];
-		} else {
-			// Notificar a los demás usuarios que alguien está listo
-			socket.to(roomId).emit("user-ready", {
-				userId: socket.id,
-				readyCount: readyUsers[roomId].size,
-				totalNeeded: rooms[roomId].users.size,
-			});
-		}
-	});
+        // Limpiar las respuestas para la siguiente actividad
+        userResponses[roomId].clear();
+    }
+});
 
 	// Añadir este nuevo evento para manejar la reconexión en actividad2
-	socket.on("reconnect-to-activity2", async (roomId) => {
-		try {
-			const userInfo = connectedUsers.get(socket.id);
-			if (!userInfo) {
-				socket.emit("error", { message: "Usuario no encontrado" });
-				return;
-			}
+	// Modificar el manejo de la reconexión para la Actividad 2
+socket.on("reconnect-to-activity2", async ({ roomId }) => {
+    try {
+        const userInfo = connectedUsers.get(socket.id);
+        if (!userInfo) {
+            socket.emit("error", { message: "Usuario no encontrado" });
+            return;
+        }
 
-			if (rooms[roomId]) {
-				socket.join(roomId);
-				userInfo.room = roomId;
-				io.to(roomId).emit("activity2-user-connected", {
-					userId: socket.id,
-					userName: userInfo.nombre,
-				});
-			} else {
-				socket.emit("room-not-available");
-			}
-		} catch (error) {
-			console.error("Error en reconnect-to-activity2:", error);
-			socket.emit("error", {
-				message: "Error al reconectar a la actividad 2",
-			});
-		}
-	});
+        const roomState = getRoomState(roomId);
+        
+        // Verificar si la sala existe y está en la actividad 2
+        if (roomState && roomState.currentActivity === 2) {
+            roomState.users.add(socket.id);
+            socket.join(roomId);
+            userInfo.room = roomId;
+
+            // Actualizar el estado del usuario en la sala
+            connectedUsers.set(socket.id, {
+                ...userInfo,
+                room: roomId
+            });
+
+            // Notificar a todos los usuarios en la sala
+            io.to(roomId).emit("activity2-user-connected", {
+                userId: socket.id,
+                userName: userInfo.nombre,
+                userCount: roomState.users.size
+            });
+
+            // Si ambos usuarios están conectados, iniciar la actividad 2
+            if (roomState.users.size === 2) {
+                io.to(roomId).emit("activity2-ready", {
+                    roomId: roomId
+                });
+            }
+        } else {
+            socket.emit("room-not-available");
+        }
+    } catch (error) {
+        console.error("Error en reconnect-to-activity2:", error);
+        socket.emit("error", {
+            message: "Error al reconectar a la actividad 2"
+        });
+    }
+});
 
 	socket.on("disconnect", (reason) => {
 		console.log(`Usuario desconectado: ${socket.id}, Razón: ${reason}`);

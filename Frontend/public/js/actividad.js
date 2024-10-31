@@ -221,16 +221,20 @@ socket.on("stop-typing", () => {
 	typingIndicator.style.display = "none";
 });
 
+// Frontend/public/js/actividad.js - Modificar el manejo de envío de respuestas
 submitButton.addEventListener("click", () => {
-	const answer = finalAnswer.value.trim();
-	if (answer) {
-		console.log("Enviando respuesta final:", answer);
-		socket.emit("ready-for-next-activity", { roomId, answer });
-		submitButton.disabled = true;
-		showWaitingMessage("Esperando a que tu compañero termine...");
-	} else {
-		alert("Por favor, escribe una respuesta antes de enviar.");
-	}
+    const answer = finalAnswer.value.trim();
+    if (answer) {
+        socket.emit("ready-for-next-activity", { roomId, answer });
+        submitButton.disabled = true;
+        showMessage("Respuesta enviada. Esperando a tu compañero...");
+    } else {
+        alert("Por favor, escribe una respuesta antes de enviar.");
+    }
+});
+// Agregar nuevo evento para manejar cuando el compañero está listo
+socket.on("partner-ready", (data) => {
+    showMessage(`${data.userName} ha enviado su respuesta.`);
 });
 
 // Agregar nuevos event listeners para la transición

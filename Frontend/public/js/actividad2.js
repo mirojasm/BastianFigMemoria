@@ -39,13 +39,15 @@ activityContent.style.display = "block";
 
 // Gestión de conexión
 socket.on("connect", () => {
-	console.log("Conectado al servidor en actividad 2");
-	myUserId = socket.id;
-	socket.emit("reconnect-to-activity2", {
-		roomId,
-		token, 
-		userInfo,
-	});
+    console.log("Conectado al servidor en actividad 2");
+    myUserId = socket.id;
+    
+    // Intentar reconectar a la actividad 2
+    socket.emit("reconnect-to-activity2", {
+        roomId,
+        token,
+        userInfo
+    });
 });
 
 socket.on("activity2-user-connected", (data) => {
@@ -53,7 +55,11 @@ socket.on("activity2-user-connected", (data) => {
 	hideWaitingMessage();
 	initializeActivity2();
 });
-
+socket.on("activity2-ready", (data) => {
+    console.log("Actividad 2 lista para comenzar");
+    hideWaitingMessage();
+    initializeActivity2();
+});
 socket.on("disconnect", (reason) => {
 	console.log("Desconectado del servidor:", reason);
 	showWaitingMessage("Desconectado del servidor. Intentando reconectar...");
@@ -71,6 +77,19 @@ function showWaitingMessage(message) {
 		waitingMessage.style.display = "block";
 		activityContent.style.opacity = "0.5";
 	}
+}
+
+// Función mejorada para mostrar mensajes
+function showMessage(message) {
+    const messageElement = document.createElement("div");
+    messageElement.className = "status-message";
+    messageElement.textContent = message;
+    document.querySelector(".activity-info").appendChild(messageElement);
+    
+    // Remover el mensaje después de 5 segundos
+    setTimeout(() => {
+        messageElement.remove();
+    }, 5000);
 }
 
 function hideWaitingMessage() {
