@@ -47,13 +47,14 @@ model parejas_colaboracion {
 }
 
 model preguntas {
-  id                  Int                   @id @default(autoincrement())
-  texto               String?               @db.Text
-  imagen_url          String?               @db.VarChar(255)
-  orden               Int?
-  nivel               Int?
-  chats_colaborativos chats_colaborativos[]
-  respuestas_finales  respuestas_finales[]
+  id                      Int                       @id @default(autoincrement())
+  texto                   String?                   @db.Text
+  imagen_url              String?                   @db.VarChar(255)
+  orden                   Int?
+  nivel                   Int?
+  chats_colaborativos     chats_colaborativos[]
+  respuestas_finales      respuestas_finales[]
+  respuestas_individuales respuestas_individuales[]
 }
 
 model respuestas_finales {
@@ -70,13 +71,27 @@ model respuestas_finales {
 }
 
 model usuarios {
-  id                                                              Int                    @id @default(autoincrement())
-  nombre                                                          String?                @db.VarChar(100)
-  email                                                           String?                @unique(map: "email") @db.VarChar(255)
+  id                                                              Int                       @id @default(autoincrement())
+  nombre                                                          String?                   @db.VarChar(100)
+  email                                                           String?                   @unique(map: "email") @db.VarChar(255)
   curso                                                           Int?
-  contrasena                                                      String?                @db.VarChar(255)
-  establecimiento                                                 String?                @db.VarChar(255)
+  contrasena                                                      String?                   @db.VarChar(255)
+  establecimiento                                                 String?                   @db.VarChar(255)
   mensajes_chat                                                   mensajes_chat[]
-  parejas_colaboracion_parejas_colaboracion_usuario1_idTousuarios parejas_colaboracion[] @relation("parejas_colaboracion_usuario1_idTousuarios")
-  parejas_colaboracion_parejas_colaboracion_usuario2_idTousuarios parejas_colaboracion[] @relation("parejas_colaboracion_usuario2_idTousuarios")
+  parejas_colaboracion_parejas_colaboracion_usuario1_idTousuarios parejas_colaboracion[]    @relation("parejas_colaboracion_usuario1_idTousuarios")
+  parejas_colaboracion_parejas_colaboracion_usuario2_idTousuarios parejas_colaboracion[]    @relation("parejas_colaboracion_usuario2_idTousuarios")
+  respuestas_individuales                                         respuestas_individuales[]
+}
+
+model respuestas_individuales {
+  id          Int        @id @default(autoincrement())
+  usuario_id  Int?
+  pregunta_id Int?
+  respuesta   String?    @db.Text
+  timestamp   DateTime?  @db.Timestamp(0)
+  usuarios    usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_individuales_ibfk_1")
+  preguntas   preguntas? @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_individuales_ibfk_2")
+
+  @@index([pregunta_id], map: "pregunta_id")
+  @@index([usuario_id], map: "usuario_id")
 }

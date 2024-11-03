@@ -345,6 +345,36 @@ socket.on("reconnect-to-activity2", async ({ roomId }) => {
         });
     }
 });
+socket.on("activity2-complete", async (data) => {
+    const userInfo = connectedUsers.get(socket.id);
+    const roomId = data.roomId;
+    const answer = data.answer;
+
+    try {
+        await colaboracionService.guardarRespuesta(
+            rooms[roomId].collaborationId,
+            2,
+            answer,
+            userInfo.token
+        );
+        console.log("Respuesta de actividad 2 guardada exitosamente");
+
+        // Limpiar datos de la sala antes de la redirección
+        if (rooms[roomId]) {
+            socket.leave(roomId);
+            delete rooms[roomId];
+        }
+        
+        // Emitir el evento de redirección
+        socket.emit("redirect-to-completion");
+        
+    } catch (error) {
+        console.error("Error al guardar respuesta:", error);
+        socket.emit("error", {
+            message: "Error al guardar la respuesta"
+        });
+    }
+});
 
 	socket.on("disconnect", (reason) => {
 		console.log(`Usuario desconectado: ${socket.id}, Razón: ${reason}`);
@@ -387,6 +417,10 @@ app.get("/login", (req, res) => {
 app.get("/levels", (req, res) => {
 	res.render("levels/niveles");
 });
+app.get('/completion', (req, res) => {
+    res.render('actividad/completion');
+});
+
 
 app.get("/seleccionar-sala", (req, res) => {
 	res.render("actividad/seleccionar-sala");
@@ -396,6 +430,7 @@ app.get("/loading/:roomId", (req, res) => {
 	const roomId = req.params.roomId;
 	res.render("loading/loading", { roomId: roomId });
 });
+
 
 app.get("/actividad/:roomId", (req, res) => {
 	const roomId = req.params.roomId;

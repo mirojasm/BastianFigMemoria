@@ -186,19 +186,21 @@ socket.on("stop-typing", () => {
 
 // Gestión de respuesta final
 submitButton.addEventListener("click", () => {
-	const answer = finalAnswer.value.trim();
-	if (answer) {
-		socket.emit("ready-for-next-activity", { roomId, answer });
-		submitButton.disabled = true;
-		showWaitingMessage("Esperando a que tu compañero termine...");
-	} else {
-		alert("Por favor, escribe una respuesta antes de enviar.");
-	}
+    const answer = finalAnswer.value.trim();
+    if (answer) {
+        socket.emit("activity2-complete", { roomId, answer });
+        submitButton.disabled = true;
+        showWaitingMessage("Guardando respuesta...");
+    } else {
+        alert("Por favor, escribe una respuesta antes de enviar.");
+    }
 });
 
-socket.on("all-activities-completed", () => {
-	alert("¡Felicitaciones! Has completado todas las actividades.");
-	window.location.href = "/actividades-completadas";
+socket.on("redirect-to-completion", () => {
+    showWaitingMessage("¡Actividades completadas! Redirigiendo...");
+    setTimeout(() => {
+        window.location.href = "/completion";
+    }, 2000);
 });
 
 // Gestión de conexión de compañeros
