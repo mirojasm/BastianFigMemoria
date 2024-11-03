@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pregunta 1 - Nivel 1</title>
+    <link rel="stylesheet" href="/resources/css/stylenivelpregunta1.css">
+</head>
+<body>
+    <div class="activity-container">
+        <div class="activity-info">
+            <h2>Actividad Individual</h2>
+            <p id="pregunta-texto">Cargando pregunta...</p>
+        </div>
+
+        <div class="image-container">
+            <img id="activity-image" src="" alt="Imagen de la actividad">
+        </div>
+
+        <div id="message-container"></div>
+
+        <div class="answer-container">
+            <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
+            <button id="submit-answer">Enviar Respuesta</button>
+            <button id="next-activity" class="next-button" style="display: none;">Siguiente Actividad</button>
+        </div>
+    </div>
+
+    <!-- Cargar el servicio de preguntas -->
+    <script src="/resources/js/preguntasService.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const submitButton = document.getElementById('submit-answer');
+            const nextButton = document.getElementById('next-activity');
+            const answerInput = document.getElementById('answer-input');
+            const messageContainer = document.getElementById('message-container');
+            const preguntaTexto = document.getElementById('pregunta-texto');
+            const activityImage = document.getElementById('activity-image');
+
+            function showMessage(message, type) {
+                messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
+            }
+
+            // Verificar token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Cargar pregunta
+            try {
+                const pregunta = await preguntasService.getPregunta(3, token);
+                preguntaTexto.textContent = pregunta.texto;
+                if (pregunta.imagen_url) {
+                    activityImage.src = pregunta.imagen_url;
+                }
+            } catch (error) {
+                showMessage('Error al cargar la pregunta: ' + error.message, 'error');
+            }
+
+            // Verificar respuesta existente
+            try {
+                const { existeRespuesta, respuesta } = await preguntasService.checkRespuesta(1, token);
+                if (existeRespuesta) {
+                    answerInput.value = respuesta;
+                    answerInput.disabled = true;
+                    submitButton.disabled = true;
+                    showMessage('Ya has respondido esta pregunta', 'success');
+                    nextButton.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error al verificar respuesta existente:', error);
+            }
+
+            nextButton.addEventListener('click', () => {
+                window.location.href = '/actividadnivel1/pregunta2nivel1';
+            });
+
+            submitButton.addEventListener('click', async function() {
+                const respuesta = answerInput.value.trim();
+                
+                if (!respuesta) {
+                    showMessage('Por favor, escribe una respuesta antes de enviar.', 'error');
+                    return;
+                }
+
+                try {
+                    await preguntasService.createRespuesta(3, respuesta, token);
+                    showMessage('Respuesta enviada correctamente', 'success');
+                    submitButton.disabled = true;
+                    answerInput.disabled = true;
+                    nextButton.style.display = 'block';
+                } catch (error) {
+                    showMessage('Error al enviar la respuesta: ' + error.message, 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

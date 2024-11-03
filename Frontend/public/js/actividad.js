@@ -25,7 +25,7 @@ const collaborativeEditingIndicator = document.getElementById(
 let myUserId;
 let typingTimer;
 const typingTimeout = 1000; // 1 segundo
-
+let hasSubmitted = false;
 // Crear el elemento para mostrar "escribiendo..."
 const typingIndicator = document.createElement("div");
 typingIndicator.className = "typing-indicator";
@@ -222,16 +222,31 @@ socket.on("stop-typing", () => {
 });
 
 // Frontend/public/js/actividad.js - Modificar el manejo de envío de respuestas
+// Modificar el event listener del botón submit
 submitButton.addEventListener("click", () => {
     const answer = finalAnswer.value.trim();
-    if (answer) {
-        socket.emit("ready-for-next-activity", { roomId, answer });
+    if (answer && !hasSubmitted) {
+        hasSubmitted = true;
         submitButton.disabled = true;
-        showMessage("Respuesta enviada. Esperando a tu compañero...");
+        
+        // Guardar la respuesta en localStorage para mostrarla en el feedback
+        localStorage.setItem('activity1Response', answer);
+        
+        // Emitir evento de respuesta lista
+        socket.emit("ready-for-next-activity", {
+            roomId,
+            answer,
+            activityNumber: 1
+        });
+        
+        showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
+    } else if (hasSubmitted) {
+        alert("Ya has enviado tu respuesta.");
     } else {
         alert("Por favor, escribe una respuesta antes de enviar.");
     }
 });
+
 // Agregar nuevo evento para manejar cuando el compañero está listo
 socket.on("partner-ready", (data) => {
     showMessage(`${data.userName} ha enviado su respuesta.`);

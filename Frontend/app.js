@@ -413,6 +413,15 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
 	res.render("login/login");
 });
+// Nuevas rutas para actividades individuales
+app.get("/actividadnivel1/pregunta1nivel1", (req, res) => {
+    res.render("actividadnivel1/pregunta1nivel1");
+});
+
+// Para la pregunta 2
+app.get("/actividadnivel1/pregunta2nivel1", (req, res) => {
+    res.render("actividadnivel1/pregunta2nivel1");
+});
 
 app.get("/levels", (req, res) => {
 	res.render("levels/niveles");
