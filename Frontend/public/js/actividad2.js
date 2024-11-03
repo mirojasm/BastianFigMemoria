@@ -198,8 +198,12 @@ submitButton.addEventListener("click", () => {
 
 socket.on("redirect-to-completion", () => {
     showWaitingMessage("¡Actividades completadas! Redirigiendo...");
+    // Usar una redirección del lado del servidor
     setTimeout(() => {
-        window.location.href = "/completion";
+        // Primero destruir la conexión del socket
+        socket.disconnect();
+        // Luego redirigir
+        window.location.replace("/completion");
     }, 2000);
 });
 
