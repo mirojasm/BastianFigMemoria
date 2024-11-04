@@ -3,28 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nivel 2 - Pregunta 2</title>
-    <link rel="stylesheet" href="/resources/css/stylenivelpregunta2.css">
+    <title>Nivel 2</title>
+    <link rel="stylesheet" href="/resources/css/stylenivel2pregunta1.css">
 </head>
 <body>
     <div class="activity-container">
         <div class="activity-info">
-            <h2>Actividad Individual - Nivel 2</h2>
-            <p id="pregunta-texto">Cargando pregunta...</p>
+            <h2>Pregunta 2 - Nivel 2</h2>
+            <p id="pregunta-texto"></p>
         </div>
 
-        <div class="text-container">
+        <!-- <div class="text-container">
             <div id="activity-text"></div>
+        </div> -->
+        <div class="text-container">
+            <div id="activity-text">
+                <p>La primera vez que vi la lluvia fue una tarde de verano en un patio interior. Ese patio era un mundo completo, con una fuente de pajaros en el centro, muchas flores y un viejo naranjo con el tronco blanco. Yo me hallaba contenta contemplando aquel árbol tan raro, cuyas hojas eran como una sustancia verde y tenía algunas frutas tan grandes y redondas como bolas de billar. De pronto escuché un ruido  sobre los techos de las casas vecinas, el cielo se oscureció y empezaron a caer gotas de agua fría, después fue un diluvio.</p>
+                <p>Aquello me pareció extraordinario, un sonido aterrador y maravilloso. El patio se inundó de inmediato, los caminos se convirtieron en pequeños lagos, el naranjo sacudía sus ramas mojadas y enormes gotas rebotaban en el suelo y sobre la fuente. Me acurruqué en un rincón, me encontraba con miedo porque creí que el mundo se estaba rompiendo. Mi madre me tomó en sus brazos para tranquilizarme, me asomó al patio y me dijo que no tuviera miedo, que eso era sólo la lluvia, un fenómeno natural tan lindo como el sol.</p>
+            </div>
         </div>
 
         <div id="message-container"></div>
 
         <div class="answer-container">
             <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
-            <button id="submit-answer">Enviar Respuesta</button>
-            <button id="next-activity" class="next-button" style="display: none;">
-                Volver a Niveles
-            </button>
+            <div class="buttons-container">
+                <button id="submit-answer">Enviar Respuesta</button>
+                <button id="next-activity" class="next-button" style="display: none;">Finalizar Nivel 2</button>
+            </div>
         </div>
     </div>
 
@@ -59,7 +65,7 @@
             try {
                 const pregunta = await preguntasService.getPregunta(6, token);
                 preguntaTexto.textContent = pregunta.texto;
-                activityText.textContent = pregunta.contenido || pregunta.texto;
+                /* activityText.textContent = pregunta.contenido || pregunta.texto; */
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
             }

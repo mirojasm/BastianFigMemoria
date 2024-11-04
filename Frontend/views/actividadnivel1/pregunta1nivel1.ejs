@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pregunta 1 - Nivel 1</title>
+    <title>Nivel 1</title>
     <link rel="stylesheet" href="/resources/css/stylenivelpregunta1.css">
 </head>
 <body>
     <div class="activity-container">
         <div class="activity-info">
-            <h2>Actividad Individual</h2>
-            <p id="pregunta-texto">Cargando pregunta...</p>
+            <h2>Pregunta 1 - Nivel 1</h2>
+            <p id="pregunta-texto"></p>
         </div>
 
         <div class="image-container">
-            <img id="activity-image" src="" alt="Imagen de la actividad">
+            <!-- <img id="activity-image" src="" alt="Imagen de la actividad"> -->
+            <img id="activity-image" src="/resources/images/fotopregunta1.png" alt="Imagen de la actividad">
         </div>
 
         <div id="message-container"></div>
 
         <div class="answer-container">
             <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
-            <button id="submit-answer">Enviar Respuesta</button>
-            <button id="next-activity" class="next-button" style="display: none;">Siguiente Actividad</button>
+            <div class="buttons-container">
+                <button id="submit-answer">Enviar Respuesta</button>
+                <button id="next-activity" class="next-button" style="display: none;">Siguiente Actividad</button>
+            </div>
         </div>
     </div>
 
@@ -36,7 +39,7 @@
             const answerInput = document.getElementById('answer-input');
             const messageContainer = document.getElementById('message-container');
             const preguntaTexto = document.getElementById('pregunta-texto');
-            const activityImage = document.getElementById('activity-image');
+            /* const activityImage = document.getElementById('activity-image'); */
 
             function showMessage(message, type) {
                 messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
@@ -53,9 +56,9 @@
             try {
                 const pregunta = await preguntasService.getPregunta(3, token);
                 preguntaTexto.textContent = pregunta.texto;
-                if (pregunta.imagen_url) {
+                /* if (pregunta.imagen_url) {
                     activityImage.src = pregunta.imagen_url;
-                }
+                } */
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
             }
