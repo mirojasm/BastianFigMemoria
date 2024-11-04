@@ -268,7 +268,7 @@ socket.on("ready-for-next-activity", async (data) => {
         try {
             await colaboracionService.guardarRespuesta(
                 roomState.collaborationId,
-                roomState.currentActivity,
+                1,
                 answer,
                 userInfo.token
             );

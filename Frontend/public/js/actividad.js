@@ -236,7 +236,7 @@ submitButton.addEventListener("click", () => {
         socket.emit("ready-for-next-activity", {
             roomId,
             answer,
-            activityNumber: 1
+            activityNumber: 1,
         });
         
         showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
