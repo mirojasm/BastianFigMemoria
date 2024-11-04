@@ -114,4 +114,44 @@ body {
     line-height: 1.6;
     color: #2c3e50;
     white-space: pre-line;
+}.ne
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 1px solid #c3e6cb;
+}
+
+.next-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    float: right; /* Alínea el botón a la derecha */
+}
+
+.next-button:hover {
+    background-color: #218838;
+}
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
 }

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actividad Individual - Pregunta 2</title>
+    <title>Nivel 2 - Pregunta 2</title>
     <link rel="stylesheet" href="/resources/css/stylenivelpregunta2.css">
 </head>
 <body>
     <div class="activity-container">
         <div class="activity-info">
-            <h2>Actividad Individual</h2>
+            <h2>Actividad Individual - Nivel 2</h2>
             <p id="pregunta-texto">Cargando pregunta...</p>
         </div>
 
@@ -23,9 +23,8 @@
             <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
             <button id="submit-answer">Enviar Respuesta</button>
             <button id="next-activity" class="next-button" style="display: none;">
-                Finalizar Nivel 1
+                Volver a Niveles
             </button>
-            
         </div>
     </div>
 
@@ -46,7 +45,7 @@
             }
 
             function showCompletionMessage() {
-                showMessage('¡Felicitaciones! Has completado todas las preguntas de este nivel. Puedes volver a la página de niveles.', 'success');
+                showMessage('¡Felicitaciones! Has completado todas las preguntas del Nivel 2. Puedes volver a la página de niveles.', 'success');
             }
 
             // Verificar token
@@ -56,9 +55,9 @@
                 return;
             }
 
-            // Cargar pregunta
+            // Cargar pregunta 6 (segunda pregunta del nivel 2)
             try {
-                const pregunta = await preguntasService.getPregunta(4, token);
+                const pregunta = await preguntasService.getPregunta(6, token);
                 preguntaTexto.textContent = pregunta.texto;
                 activityText.textContent = pregunta.contenido || pregunta.texto;
             } catch (error) {
@@ -66,7 +65,6 @@
             }
 
             nextButton.addEventListener('click', () => {
-                // Redirigir a la página de niveles
                 window.location.href = '/levels';
             });
 
@@ -79,10 +77,10 @@
                 }
 
                 try {
-                    await preguntasService.createRespuesta(4, respuesta, token);
+                    await preguntasService.createRespuesta(6, respuesta, token);
                     showMessage('Respuesta enviada correctamente', 'success');
                     
-                    // Mostrar mensaje de finalización
+                    // Mostrar mensaje de finalización de nivel
                     showCompletionMessage();
                     
                     // Limpiar el input
@@ -97,6 +95,5 @@
             });
         });
     </script>
-
 </body>
 </html>

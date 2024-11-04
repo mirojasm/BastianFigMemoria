@@ -423,6 +423,15 @@ app.get("/actividadnivel1/pregunta2nivel1", (req, res) => {
     res.render("actividadnivel1/pregunta2nivel1");
 });
 
+// Rutas para nivel 2
+app.get("/actividadnivel2/pregunta1nivel2", (req, res) => {
+    res.render("actividadnivel2/pregunta1nivel2");
+});
+
+app.get("/actividadnivel2/pregunta2nivel2", (req, res) => {
+    res.render("actividadnivel2/pregunta2nivel2");
+});
+
 app.get("/levels", (req, res) => {
 	res.render("levels/niveles");
 });

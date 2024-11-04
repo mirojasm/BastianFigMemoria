@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actividad Individual - Pregunta 2</title>
-    <link rel="stylesheet" href="/resources/css/stylenivelpregunta2.css">
+    <title>Nivel 2 - Pregunta 1</title>
+    <link rel="stylesheet" href="/resources/css/stylenivelpregunta1.css">
 </head>
 <body>
     <div class="activity-container">
         <div class="activity-info">
-            <h2>Actividad Individual</h2>
+            <h2>Actividad Individual - Nivel 2</h2>
             <p id="pregunta-texto">Cargando pregunta...</p>
         </div>
 
-        <div class="text-container">
-            <div id="activity-text"></div>
+        <div class="image-container">
+            <img id="activity-image" src="" alt="Imagen de la actividad">
         </div>
 
         <div id="message-container"></div>
@@ -23,15 +23,14 @@
             <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
             <button id="submit-answer">Enviar Respuesta</button>
             <button id="next-activity" class="next-button" style="display: none;">
-                Finalizar Nivel 1
+                Siguiente Pregunta
             </button>
-            
         </div>
     </div>
 
     <!-- Cargar el servicio de preguntas -->
     <script src="/resources/js/preguntasService.js"></script>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             const submitButton = document.getElementById('submit-answer');
@@ -39,14 +38,10 @@
             const answerInput = document.getElementById('answer-input');
             const messageContainer = document.getElementById('message-container');
             const preguntaTexto = document.getElementById('pregunta-texto');
-            const activityText = document.getElementById('activity-text');
+            const activityImage = document.getElementById('activity-image');
 
             function showMessage(message, type) {
                 messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
-            }
-
-            function showCompletionMessage() {
-                showMessage('¡Felicitaciones! Has completado todas las preguntas de este nivel. Puedes volver a la página de niveles.', 'success');
             }
 
             // Verificar token
@@ -56,18 +51,19 @@
                 return;
             }
 
-            // Cargar pregunta
+            // Cargar pregunta 5 (primera pregunta del nivel 2)
             try {
-                const pregunta = await preguntasService.getPregunta(4, token);
+                const pregunta = await preguntasService.getPregunta(5, token);
                 preguntaTexto.textContent = pregunta.texto;
-                activityText.textContent = pregunta.contenido || pregunta.texto;
+                if (pregunta.imagen_url) {
+                    activityImage.src = pregunta.imagen_url;
+                }
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
             }
 
             nextButton.addEventListener('click', () => {
-                // Redirigir a la página de niveles
-                window.location.href = '/levels';
+                window.location.href = '/actividadnivel2/pregunta2nivel2';
             });
 
             submitButton.addEventListener('click', async function() {
@@ -79,24 +75,17 @@
                 }
 
                 try {
-                    await preguntasService.createRespuesta(4, respuesta, token);
+                    await preguntasService.createRespuesta(5, respuesta, token);
                     showMessage('Respuesta enviada correctamente', 'success');
-                    
-                    // Mostrar mensaje de finalización
-                    showCompletionMessage();
-                    
-                    // Limpiar el input
+                    // Limpiar el input después de enviar
                     answerInput.value = '';
-                    
-                    // Mostrar el botón para volver a niveles
+                    // Mostrar el botón de siguiente
                     nextButton.style.display = 'block';
-                    
                 } catch (error) {
                     showMessage('Error al enviar la respuesta: ' + error.message, 'error');
                 }
             });
         });
     </script>
-
 </body>
 </html>
