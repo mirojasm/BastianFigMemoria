@@ -281,6 +281,29 @@ h1 {
     line-height: 1.6;
     color: #2c3e50;
 }
+.text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.text-section {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.text-section h3 {
+    margin-top: 0;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.text-content {
+    line-height: 1.6;
+    margin: 0;
+}
 
 @media (max-width: 768px) {
     .image-container {
