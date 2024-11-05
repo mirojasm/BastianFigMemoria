@@ -8,6 +8,7 @@ import chatRoutes from './src/routes/chatRoutes.js';
 import errorHandler from './src/utils/errorHandler.js';
 import authRoutes from './src/routes/authRoutes.js'; // Importa las nuevas rutas de autenticación
 import preguntasdividualesRoutes from './src/routes/preguntasdividualesRoutes.js';
+import feedbackRoutes from './src/routes/feedbackRoutes.js';
 // Cargar variables de entorno
 dotenv.config();
 
@@ -49,6 +50,8 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/auth', authRoutes); // Usa las nuevas rutas de autenticación
 app.use('/api', preguntasdividualesRoutes);
 // Manejador de errores
+// Rutas API
+app.use('/api/feedback', feedbackRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;

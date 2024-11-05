@@ -1,0 +1,73 @@
+<!-- src/views/test-openai.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba OpenAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4">Prueba de Conexión con OpenAI</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <button 
+                id="testButton"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+            >
+                Probar Conexión
+            </button>
+            
+            <div id="status" class="mt-4">
+                <div class="animate-pulse hidden" id="loading">
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div id="result" class="mt-4 p-4 rounded hidden">
+                    <!-- Aquí se mostrará el resultado -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testButton').addEventListener('click', async () => {
+            const loadingEl = document.getElementById('loading');
+            const resultEl = document.getElementById('result');
+            
+            try {
+                loadingEl.classList.remove('hidden');
+                resultEl.classList.add('hidden');
+                
+                const response = await fetch('/api/feedback/test-openai');
+                const data = await response.json();
+                
+                loadingEl.classList.add('hidden');
+                resultEl.classList.remove('hidden');
+                
+                if (data.success) {
+                    resultEl.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 text-green-700 p-4 rounded">
+                            <p class="font-bold">¡Conexión exitosa!</p>
+                            <p class="mt-2">Respuesta de OpenAI:</p>
+                            <p class="mt-1 text-sm">${data.response.content}</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                loadingEl.classList.add('hidden');
+                resultEl.classList.remove('hidden');
+                resultEl.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
+                        <p class="font-bold">Error al conectar con OpenAI</p>
+                        <p class="mt-2">${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -439,6 +439,14 @@ app.get('/completion', (req, res) => {
     res.render('actividad/completion');
 });
 
+app.get('/feedback', (req, res) => {
+    res.render('feedback/feedback');
+});
+
+
+app.get('/test-openai', (req, res) => {
+    res.render('test-openai');
+});
 
 app.get("/seleccionar-sala", (req, res) => {
 	res.render("actividad/seleccionar-sala");

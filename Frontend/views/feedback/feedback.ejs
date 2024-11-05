@@ -1,0 +1,207 @@
+<!-- src/views/feedback.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Aprendizaje</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <h2 class="text-lg">
+                    Bienvenido, <span id="username" class="font-semibold">Usuario</span> 
+                    de <span id="userSchool" class="font-semibold">Colegio</span>
+                </h2>
+            </div>
+            <button id="cerrarSesion" 
+                    class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">
+                Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Tu Análisis de Aprendizaje</h1>
+        
+        <!-- Resumen Estadístico -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Resumen Estadístico</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded">
+                    <p class="text-sm text-blue-600">Total de Preguntas</p>
+                    <p class="text-2xl font-bold" id="totalPreguntas">-</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <p class="text-sm text-green-600">Interacciones Colaborativas</p>
+                    <p class="text-2xl font-bold" id="totalInteracciones">-</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <p class="text-sm text-purple-600">Promedio de Mensajes</p>
+                    <p class="text-2xl font-bold" id="promedioMensajes">-</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feedback General -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Análisis General</h2>
+            <div id="feedbackGeneral" class="prose max-w-none">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detalle por Pregunta -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Detalle por Pregunta</h2>
+            <div id="preguntasDetalle" class="space-y-6">
+                <!-- Las preguntas se cargarán aquí -->
+            </div>
+        </div>
+    </div>
+    <script>
+        // Función para obtener la información del usuario del localStorage
+        const getUserInfo = () => {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        };
+    
+        // Función para mostrar la información del usuario en el navbar
+        const displayUserInfo = () => {
+            const userInfo = getUserInfo();
+            if (userInfo) {
+                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+            } else {
+                window.location.href = '/login';
+            }
+        };
+    
+        // Función para cerrar sesión
+        const cerrarSesion = () => {
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        };
+    
+        async function cargarFeedbackGeneral() {
+            try {
+                const userInfo = getUserInfo();
+                if (!userInfo || !userInfo.id) {
+                    throw new Error('No se encontró información del usuario');
+                }
+    
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No se encontró token de autenticación');
+                }
+    
+                // URL actualizada según la nueva estructura de rutas
+                const response = await fetch('/api/feedback/general', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+    
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Error al obtener el feedback');
+                }
+    
+                const data = await response.json();
+    
+                // Verificar si tenemos datos válidos
+                if (!data || !data.feedbackGeneral) {
+                    throw new Error('Datos de feedback incompletos');
+                }
+                
+                // Actualizar resumen estadístico con verificación de datos
+                const stats = data.resumenEstadistico || {};
+                document.getElementById('totalPreguntas').textContent = 
+                    stats.totalPreguntas || '0';
+                document.getElementById('totalInteracciones').textContent = 
+                    stats.totalInteraccionesColaborativas || '0';
+                document.getElementById('promedioMensajes').textContent = 
+                    stats.promedioMensajesPorPregunta || '0';
+                
+                // Actualizar feedback general con formato mejorado
+                document.getElementById('feedbackGeneral').innerHTML = 
+                    data.feedbackGeneral.replace(/\n/g, '<br>');
+                
+                // Actualizar detalle de preguntas con verificación de datos
+                const preguntas = data.preguntasAnalizadas || [];
+                const detalleHTML = preguntas.map((p, index) => `
+                    <div class="border-b pb-6 last:border-0">
+                        <h3 class="font-semibold text-lg mb-4">Pregunta ${index + 1}</h3>
+                        <div class="bg-gray-50 p-4 rounded mb-4">
+                            <p class="font-medium">Pregunta:</p>
+                            <p class="mt-1">${p.pregunta || 'No disponible'}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="bg-blue-50 p-4 rounded">
+                                <p class="font-medium text-blue-700">Tu Respuesta Individual:</p>
+                                <p class="mt-1">${p.respuestaIndividual || 'No disponible'}</p>
+                            </div>
+                            
+                            <div class="bg-green-50 p-4 rounded">
+                                <p class="font-medium text-green-700">Respuesta Colaborativa Final:</p>
+                                <p class="mt-1">${p.respuestaColaborativa || 'No disponible'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 p-4 rounded">
+                            <p class="font-medium text-purple-700">Tu Proceso Colaborativo:</p>
+                            <div class="mt-2 space-y-2">
+                                ${(p.mensajesColaborativos || []).length > 0 
+                                    ? p.mensajesColaborativos.map(m => 
+                                        `<p class="text-sm">${m}</p>`
+                                    ).join('')
+                                    : '<p class="text-sm italic">No hay mensajes colaborativos registrados</p>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('preguntasDetalle').innerHTML = 
+                    detalleHTML || '<p class="text-gray-500 italic">No hay preguntas disponibles para mostrar</p>';
+    
+            } catch (error) {
+                console.error('Error cargando feedback:', error);
+                const errorMessage = error.message === 'No se encontró información del usuario' || 
+                                   error.message === 'No se encontró token de autenticación'
+                    ? 'Sesión expirada. Redirigiendo al login...'
+                    : 'Error al cargar el análisis. Por favor, intenta de nuevo.';
+    
+                document.getElementById('feedbackGeneral').innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        ${errorMessage}
+                    </div>`;
+    
+                if (errorMessage.includes('Sesión expirada')) {
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                }
+            }
+        }
+    
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            displayUserInfo();
+            document.getElementById('cerrarSesion').addEventListener('click', cerrarSesion);
+            cargarFeedbackGeneral();
+        });
+    </script>
+</body>
+</html>
