@@ -3,7 +3,7 @@ import { FeedbackService } from '../services/feedbackService.js';
 const feedbackController = {
     async getFeedback(req, res) {
         try {
-            const userId = req.user.id; // Asumiendo que el middleware de auth añade el usuario
+            const userId = req.usuario.id; // Asumiendo que el middleware de auth añade el usuario
             const feedbackService = new FeedbackService();
             const feedback = await feedbackService.generateGeneralFeedback(userId);
             
