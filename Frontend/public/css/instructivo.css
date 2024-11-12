@@ -1,0 +1,251 @@
+/* Estilos base y reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #3f87a6, #ebf8e1);
+    font-family: 'Poppins', sans-serif;
+    position: relative;
+}
+
+/* Animaciones de fondo */
+body::before, 
+body::after {
+    content: '';
+    position: fixed; /* Cambiado de absolute a fixed */
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+    animation: float 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+body::before {
+    top: -150px;
+    left: -150px;
+    animation-delay: 0s;
+}
+
+body::after {
+    bottom: -150px;
+    right: -150px;
+    animation-delay: 3s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.navbar h2 {
+    color: #fff;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    margin: 0;
+}
+
+#username, 
+#userSchool {
+    color: #4dd0e1;
+    font-weight: 600;
+}
+
+#cerrarSesion {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#cerrarSesion:hover {
+    background-color: #c82333;
+}
+
+/* Contenedor principal */
+.main-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    min-height: 0; /* Importante para evitar desbordamiento */
+    position: relative;
+}
+
+/* Tarjeta de instrucciones */
+.instruction-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    width: min(95%, 1000px);
+    max-height: calc(100vh - 120px); /* Altura máxima ajustada */
+    overflow-y: auto;
+    margin: auto;
+}
+
+/* Título */
+.instruction-title {
+    color: #2c3e50;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.instruction-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100px, 30%);
+    height: 3px;
+    background-color: #3f87a6;
+    border-radius: 2px;
+}
+
+/* Contenedor de instrucciones */
+.instruction-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Pasos de instrucción */
+.instruction-step {
+    background: rgba(63, 135, 166, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.instruction-step:hover {
+    transform: translateY(-5px);
+}
+
+.instruction-step h3 {
+    color: #3f87a6;
+    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+    margin-bottom: 1rem;
+}
+
+.instruction-step p {
+    color: #455a64;
+    line-height: 1.6;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    text-align: center;
+}
+
+/* Contenedor de botones */
+.buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Botones */
+.button {
+    background-color: #3f87a6;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    min-width: 200px;
+    text-align: center;
+}
+
+.button:hover {
+    background-color: #fff;
+    color: #3f87a6;
+    border-color: #3f87a6;
+}
+
+.button.secondary {
+    background-color: transparent;
+    color: #3f87a6;
+    border-color: #3f87a6;
+}
+
+.button.secondary:hover {
+    background-color: #3f87a6;
+    color: white;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .navbar-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .buttons-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .instruction-card {
+        padding: 1.5rem;
+        margin: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .instruction-card {
+        padding: 1rem;
+    }
+
+    .instruction-step {
+        padding: 1rem;
+    }
+
+    .button {
+        padding: 0.5rem 1rem;
+        min-width: 150px;
+    }
+}

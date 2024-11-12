@@ -56,7 +56,7 @@
                         userInfo: localStorage.getItem('userInfo')
                     });
                     // Redirige al usuario a la página de niveles
-                    window.location.href = '/levels';
+                    window.location.href = '/instructivo';
                 } else {
                     const errorData = await response.json();
                     alert(errorData.message || 'Error en la autenticación');

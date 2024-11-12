@@ -409,10 +409,13 @@ socket.on("activity2-complete", async (data) => {
 app.get("/", (req, res) => {
 	res.render("login/login");
 });
-
+app.get('/instructivo', (req, res) => {
+    res.render('indicaciones/instructivo');
+});
 app.get("/login", (req, res) => {
 	res.render("login/login");
 });
+
 // Nuevas rutas para actividades individuales
 app.get("/actividadnivel1/pregunta1nivel1", (req, res) => {
     res.render("actividadnivel1/pregunta1nivel1");
