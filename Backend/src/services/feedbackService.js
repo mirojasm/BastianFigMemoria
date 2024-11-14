@@ -137,7 +137,10 @@ export class FeedbackService {
                 Eres un docente que proporciona feedback básico sobre las respuestas de los estudiantes.
                 Tu tarea es simplemente indicar si cada respuesta es correcta o incorrecta, basándote en las respuestas esperadas, pero tomalo como referencia solamente.
                 
-                Aquí están las preguntas, las preguntas 1 y 2 son de caracter colaborativo, la pregunta se basa en una pregunta de evaluacion mientras que la pregunta 2 es de metacognicion  y respuestas del estudiante:
+                Aquí están las preguntas, las preguntas 1 y 2 son de caracter colaborativo, la pregunta 1 se basa en una pregunta de evaluacion y tiene dos imagenes la cual la primera
+                imagen se describe: muestra un paisaje natural impresionante. En primer plano, hay varios árboles de pino, enmarcando la vista de un lago de aguas cristalinas y tranquilas, que reflejan las montañas y el cielo como un espejo.  
+                mientras que la segunda imagen muestra una escena contrastante entre naturaleza y contaminación industrial. En primer plano, hay una carretera rodeada de áreas verdes y árboles, que se extiende hacia el fondo de la imagen. Sin embargo, al fondo, se observa una zona industrial con varias chimeneas emitiendo grandes cantidades de humo o vapor al ambiente. Este humo se esparce y cubre parte del paisaje, creando una atmósfera brumosa y densa que afecta la claridad de la escena.
+                La pregunta 2 es de metacognicion y es de un texto el cual es el siguiente:  y respuestas del estudiante:
                 
                 ${preguntasAnalizadas.map((p) => `
                 Pregunta ${p.preguntaId}: ${p.pregunta}
