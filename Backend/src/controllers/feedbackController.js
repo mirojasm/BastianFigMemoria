@@ -3,7 +3,7 @@ import { FeedbackService } from '../services/feedbackService.js';
 const feedbackController = {
     async getFeedback(req, res) {
         try {
-            const userId = req.usuario.id; // Asumiendo que el middleware de auth añade el usuario
+            const userId = req.usuario.id;
             const feedbackService = new FeedbackService();
             const feedback = await feedbackService.generateGeneralFeedback(userId);
             
@@ -13,6 +13,23 @@ const feedbackController = {
             res.status(500).json({
                 success: false,
                 error: 'Error al generar el feedback',
+                details: error.message
+            });
+        }
+    },
+
+    async getFeedbackElaborado(req, res) {
+        try {
+            const userId = req.usuario.id;
+            const feedbackService = new FeedbackService();
+            const feedback = await feedbackService.generateElaboratedFeedback(userId);
+            
+            res.json(feedback);
+        } catch (error) {
+            console.error('Error en feedbackController elaborado:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Error al generar el feedback elaborado',
                 details: error.message
             });
         }

@@ -445,6 +445,10 @@ app.get('/completion', (req, res) => {
 app.get('/feedback', (req, res) => {
     res.render('feedback/feedback');
 });
+// En tu archivo de rutas del frontend
+app.get('/feedback-elaborado', (req, res) => {
+    res.render('feedback/feedback-elaborado');
+});
 
 
 app.get('/test-openai', (req, res) => {

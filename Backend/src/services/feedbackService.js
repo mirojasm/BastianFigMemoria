@@ -3,19 +3,14 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Mapeo de imágenes para las preguntas 3 y 4
-const IMAGEN_PREGUNTAS = {
-    3: '/ruta/a/imagen-pregunta3.jpg',
-    4: '/ruta/a/imagen-pregunta4.jpg'
-};
 
 // Respuestas esperadas para cada pregunta
 const RESPUESTAS_ESPERADAS = {
-    1: "La IA plantea desafíos éticos en privacidad, equidad y toma de decisiones automatizada.",
-    2: "La IA transformará empleos existentes y creará nuevos, requiriendo adaptación educativa.",
+    1: "Creo que tanto las personas como las empresas deberían estar dispuestas a dejar de lado algunas comodidades para cuidar el medio ambiente. ",
+    2: "La Rana podría haber pasado tiempo reflexionando sobre sus propias cualidades y entendiendo lo que la hacía única, sin necesitar que otros le dijeran cómo debía ser.",
     3: "La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar. ",
     4: "La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar. ",
-    5: "La narradora experimenta la lluvia por primera vez en un patio interior con un naranjo.",
+    5: "La narradora experimenta la lluvia por primera vez en un patio interior con un naranjo, lo cual puede parecer bien o mal mientras se responda la pregunta",
     6: "El texto describe una experiencia personal de descubrimiento y aprendizaje."
 };
 
@@ -140,7 +135,24 @@ export class FeedbackService {
                 Aquí están las preguntas, las preguntas 1 y 2 son de caracter colaborativo, la pregunta 1 se basa en una pregunta de evaluacion y tiene dos imagenes la cual la primera
                 imagen se describe: muestra un paisaje natural impresionante. En primer plano, hay varios árboles de pino, enmarcando la vista de un lago de aguas cristalinas y tranquilas, que reflejan las montañas y el cielo como un espejo.  
                 mientras que la segunda imagen muestra una escena contrastante entre naturaleza y contaminación industrial. En primer plano, hay una carretera rodeada de áreas verdes y árboles, que se extiende hacia el fondo de la imagen. Sin embargo, al fondo, se observa una zona industrial con varias chimeneas emitiendo grandes cantidades de humo o vapor al ambiente. Este humo se esparce y cubre parte del paisaje, creando una atmósfera brumosa y densa que afecta la claridad de la escena.
-                La pregunta 2 es de metacognicion y es de un texto el cual es el siguiente:  y respuestas del estudiante:
+                La pregunta 2 es de metacognicion y es de un texto el cual es el siguiente:Había una vez una Rana que quería ser una Rana auténtica, y
+                todos los días se esforzaba en ello.
+                Al principio se compró un espejo en el que se miraba largamente
+                buscando su ansiada autenticidad.
+                Unas veces parecía encontrarla y otras no, según el humor de
+                ese día o de la hora, hasta que se cansó de esto y guardó el espejo
+                en un baúl.
+                Por fin pensó que la única forma de conocer su propio valor estaba en la opinión de la gente, y comenzó a peinarse y a vestirse y a
+                desvestirse (cuando no le quedaba otro recurso) para saber si los
+                demás la aprobaban y reconocían que era una Rana auténtica.
+                Un día observó que lo que más admiraban de ella era su cuerpo,
+                especialmente sus piernas, de manera que se dedicó a hacer sentadillas y a saltar para tener unas ancas cada vez mejores, y sentía
+                que todos la aplaudían.
+                Y así seguía haciendo esfuerzos hasta que, dispuesta a cualquier cosa para lograr que la consideraran una Rana auténtica, se
+                dejaba arrancar las ancas, y los otros se las comían, y ella todavía
+                alcanzaba a oír con amargura cuando decían que qué buena Rana,
+                que parecía Pollo. 
+                y las respuestas del estudiante:
                 
                 ${preguntasAnalizadas.map((p) => `
                 Pregunta ${p.preguntaId}: ${p.pregunta}
@@ -211,6 +223,177 @@ export class FeedbackService {
                 tipo: 'colaborativa',
                 compañero: compañero || 'Compañero no asignado',
                 rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2'
+            };
+        });
+    }
+    async generateElaboratedFeedback(userId) {
+        try {
+            if (!userId) {
+                throw new Error('userId es requerido');
+            }
+
+            // Obtener respuestas individuales
+            const respuestasIndividuales = await prisma.respuestas_individuales.findMany({
+                where: {
+                    usuario_id: userId,
+                    pregunta_id: {
+                        in: CONFIGURACION_PREGUNTAS.INDIVIDUALES
+                    }
+                },
+                include: {
+                    preguntas: true
+                },
+                orderBy: {
+                    pregunta_id: 'asc'
+                }
+            });
+
+            // Obtener respuestas colaborativas con historial de chat
+            const respuestasColaborativas = await prisma.respuestas_finales.findMany({
+                where: {
+                    pregunta_id: {
+                        in: CONFIGURACION_PREGUNTAS.COLABORATIVAS
+                    },
+                    parejas_colaboracion: {
+                        OR: [
+                            { usuario1_id: userId },
+                            { usuario2_id: userId }
+                        ]
+                    }
+                },
+                include: {
+                    preguntas: true,
+                    parejas_colaboracion: {
+                        include: {
+                            usuarios_parejas_colaboracion_usuario1_idTousuarios: true,
+                            usuarios_parejas_colaboracion_usuario2_idTousuarios: true,
+                            chats_colaborativos: {
+                                include: {
+                                    mensajes_chat: {
+                                        orderBy: {
+                                            timestamp: 'asc'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    pregunta_id: 'asc'
+                }
+            });
+
+            // Validar respuestas completas
+            const respuestasIndividualesIds = respuestasIndividuales.map(r => r.pregunta_id);
+            const respuestasColaborativasIds = respuestasColaborativas.map(r => r.pregunta_id);
+
+            const faltantesIndividuales = CONFIGURACION_PREGUNTAS.INDIVIDUALES.filter(
+                id => !respuestasIndividualesIds.includes(id)
+            );
+            const faltantesColaborativas = CONFIGURACION_PREGUNTAS.COLABORATIVAS.filter(
+                id => !respuestasColaborativasIds.includes(id)
+            );
+
+            if (faltantesIndividuales.length > 0 || faltantesColaborativas.length > 0) {
+                return {
+                    error: true,
+                    mensaje: 'Respuestas incompletas',
+                    faltantes: {
+                        individuales: faltantesIndividuales,
+                        colaborativas: faltantesColaborativas
+                    },
+                    totalRespuestas: {
+                        esperadas: CONFIGURACION_PREGUNTAS.TOTAL_PREGUNTAS,
+                        encontradas: respuestasIndividuales.length + respuestasColaborativas.length
+                    }
+                };
+            }
+
+            // Procesar las preguntas con el historial del chat
+            const preguntasAnalizadas = [
+                ...this.procesarRespuestasColaborativasConChat(respuestasColaborativas, userId),
+                ...this.procesarRespuestasIndividuales(respuestasIndividuales)
+            ].sort((a, b) => a.preguntaId - b.preguntaId);
+
+            const textoContexto = `La primera vez que vi la lluvia fue una tarde de verano en un patio interior...`; // Tu texto completo aquí
+
+            const prompt = `
+                Eres un docente experto que proporciona feedback detallado y constructivo sobre las respuestas de los estudiantes.
+                Tu objetivo es ayudar a los estudiantes a mejorar su pensamiento crítico proporcionando:
+                1. Una evaluación detallada de cada respuesta
+                2. Aspectos positivos específicos de cada respuesta
+                3. Sugerencias concretas para mejorar
+                4. Para las preguntas colaborativas, comentarios sobre la calidad del diálogo
+                5. Recomendaciones generales para futuras actividades
+
+                Aquí están las preguntas y respuestas del estudiante:
+
+                ${preguntasAnalizadas.map((p) => `
+                Pregunta ${p.preguntaId}: ${p.pregunta}
+                ${[3, 4].includes(p.preguntaId) ? 
+                    `\nContexto: La imagen es una ilustración que muestra a una persona en el agua...` : ''}
+                ${[5, 6].includes(p.preguntaId) ? 
+                    `\nContexto: ${textoContexto}` : ''}
+                
+                Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
+                Respuesta del estudiante: ${p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal}
+                ${p.tipo === 'colaborativa' && p.historialChat ? `
+                Historial de chat:
+                ${p.historialChat.map(msg => `${msg.emisor}: ${msg.mensaje}`).join('\n')}
+                ` : ''}
+                `).join('\n---\n')}
+            `;
+
+            const completion = await this.openai.chat.completions.create({
+                messages: [{ role: 'user', content: prompt }],
+                model: 'gpt-4-0613',
+                temperature: 0.5,
+                max_tokens: 1000
+            });
+
+            return {
+                feedbackElaborado: completion.choices[0].message.content,
+                resumenEstadistico: {
+                    totalPreguntas: CONFIGURACION_PREGUNTAS.TOTAL_PREGUNTAS,
+                    preguntasIndividuales: respuestasIndividuales.length,
+                    preguntasColaborativas: respuestasColaborativas.length,
+                    preguntasAnalizadas: preguntasAnalizadas.length
+                },
+                preguntasAnalizadas
+            };
+
+        } catch (error) {
+            console.error('Error generando feedback elaborado:', error);
+            throw new Error(`Error al generar el feedback elaborado: ${error.message}`);
+        }
+    }
+    
+    // Nuevo método para procesar respuestas colaborativas incluyendo el chat
+    procesarRespuestasColaborativasConChat(respuestas, userId) {
+        return respuestas.map(resp => {
+            const pareja = resp.parejas_colaboracion;
+            const esUsuario1 = pareja.usuario1_id === userId;
+            
+            const compañero = esUsuario1
+                ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
+                : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
+    
+            // Procesar el historial del chat
+            const historialChat = pareja.chats_colaborativos?.[0]?.mensajes_chat.map(mensaje => ({
+                emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
+                mensaje: mensaje.contenido,
+                fecha: mensaje.fecha_envio
+            })) || [];
+    
+            return {
+                preguntaId: resp.pregunta_id,
+                pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
+                respuestaFinal: resp.respuesta_final,
+                tipo: 'colaborativa',
+                compañero: compañero || 'Compañero no asignado',
+                rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
+                historialChat
             };
         });
     }
