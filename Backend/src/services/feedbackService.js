@@ -137,12 +137,12 @@ export class FeedbackService {
                 Eres un docente que proporciona feedback básico sobre las respuestas de los estudiantes.
                 Tu tarea es simplemente indicar si cada respuesta es correcta o incorrecta, basándote en las respuestas esperadas, pero tomalo como referencia solamente.
                 
-                Aquí están las preguntas y respuestas del estudiante:
+                Aquí están las preguntas, las preguntas 1 y 2 son de caracter colaborativo, la pregunta se basa en una pregunta de evaluacion mientras que la pregunta 2 es de metacognicion  y respuestas del estudiante:
                 
                 ${preguntasAnalizadas.map((p) => `
                 Pregunta ${p.preguntaId}: ${p.pregunta}
                 ${[3, 4].includes(p.preguntaId) ? 
-                    `\nContexto: Imagen de referencia: ${IMAGEN_PREGUNTAS[p.preguntaId]}` : ''}
+                    `\nContexto: La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar.` : ''}
                 ${[5, 6].includes(p.preguntaId) ? 
                     `\nContexto: ${textoContexto}` : ''}
                 
