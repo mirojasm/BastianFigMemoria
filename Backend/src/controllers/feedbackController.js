@@ -34,6 +34,23 @@ const feedbackController = {
             });
         }
     },
+    // En feedbackController.js
+async getFeedbackAcumulado(req, res) {
+    try {
+        const userId = req.usuario.id;
+        const feedbackService = new FeedbackService();
+        const feedback = await feedbackService.generateAccumulatedFeedback(userId);
+        
+        res.json(feedback);
+    } catch (error) {
+        console.error('Error en feedbackController acumulado:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al generar el feedback acumulado',
+            details: error.message
+        });
+    }
+},
 
     async testOpenAI(req, res) {
         try {

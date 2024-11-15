@@ -13,6 +13,45 @@ const RESPUESTAS_ESPERADAS = {
     5: "La narradora experimenta la lluvia por primera vez en un patio interior con un naranjo, lo cual puede parecer bien o mal mientras se responda la pregunta",
     6: "El texto describe una experiencia personal de descubrimiento y aprendizaje."
 };
+// Agregar contexto adicional solo para el feedback acumulado
+const CONTEXTO_EXTENDIDO = {
+    1: {
+        tipo: "evaluacion",
+        tematica: "Medio ambiente y responsabilidad social",
+        habilidades: ["Análisis crítico", "Evaluación de impacto", "Toma de decisiones"],
+        aspectos_clave: ["Equilibrio entre comodidad y responsabilidad", "Impacto ambiental", "Compromiso social"]
+    },
+    2: {
+        tipo: "metacognicion",
+        tematica: "Identidad y autenticidad",
+        habilidades: ["Reflexión personal", "Análisis de motivaciones", "Pensamiento independiente"],
+        aspectos_clave: ["Autoconocimiento", "Presión social", "Valores personales"]
+    },
+    3: {
+        tipo: "analisis_imagen",
+        tematica: "Comportamiento social y tecnología",
+        habilidades: ["Interpretación visual", "Análisis de comportamiento social", "Juicio ético"],
+        aspectos_clave: ["Responsabilidad social", "Uso de tecnología", "Empatía"]
+    },
+    4: {
+        tipo: "analisis_imagen",
+        tematica: "Comportamiento social y tecnología",
+        habilidades: ["Interpretación visual", "Análisis de comportamiento social", "Juicio ético"],
+        aspectos_clave: ["Responsabilidad social", "Uso de tecnología", "Empatía"]
+    },
+    5: {
+        tipo: "comprension_lectora",
+        tematica: "Experiencias personales y percepción",
+        habilidades: ["Interpretación textual", "Análisis de experiencias", "Comprensión emocional"],
+        aspectos_clave: ["Perspectiva personal", "Experiencia sensorial", "Memoria y emoción"]
+    },
+    6: {
+        tipo: "comprension_lectora",
+        tematica: "Experiencias personales y aprendizaje",
+        habilidades: ["Interpretación textual", "Análisis narrativo", "Reflexión personal"],
+        aspectos_clave: ["Experiencia personal", "Proceso de aprendizaje", "Descubrimiento"]
+    }
+};
 
 // Configuración de las preguntas esperadas
 const CONFIGURACION_PREGUNTAS = {
@@ -31,7 +70,216 @@ export class FeedbackService {
             apiKey: process.env.OPENAI_API_KEY
         });
     }
+    async generateAccumulatedFeedback(userId) {
+        try {
+            if (!userId) {
+                throw new Error('userId es requerido');
+            }
 
+            // Obtener respuestas individuales
+            const respuestasIndividuales = await prisma.respuestas_individuales.findMany({
+                where: {
+                    usuario_id: userId
+                },
+                include: {
+                    preguntas: true
+                },
+                orderBy: {
+                    pregunta_id: 'asc'
+                }
+            });
+
+            // Obtener respuestas colaborativas con chat
+            const respuestasColaborativas = await prisma.respuestas_finales.findMany({
+                where: {
+                    parejas_colaboracion: {
+                        OR: [
+                            { usuario1_id: userId },
+                            { usuario2_id: userId }
+                        ]
+                    }
+                },
+                include: {
+                    preguntas: true,
+                    parejas_colaboracion: {
+                        include: {
+                            usuarios_parejas_colaboracion_usuario1_idTousuarios: true,
+                            usuarios_parejas_colaboracion_usuario2_idTousuarios: true,
+                            chats_colaborativos: {
+                                include: {
+                                    mensajes_chat: {
+                                        orderBy: {
+                                            timestamp: 'asc'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    pregunta_id: 'asc'
+                }
+            });
+
+            // Validaciones
+            const respuestasIndividualesIds = respuestasIndividuales.map(r => r.pregunta_id);
+            const respuestasColaborativasIds = respuestasColaborativas.map(r => r.pregunta_id);
+
+            const faltantesIndividuales = CONFIGURACION_PREGUNTAS.INDIVIDUALES.filter(
+                id => !respuestasIndividualesIds.includes(id)
+            );
+            const faltantesColaborativas = CONFIGURACION_PREGUNTAS.COLABORATIVAS.filter(
+                id => !respuestasColaborativasIds.includes(id)
+            );
+
+            if (faltantesIndividuales.length > 0 || faltantesColaborativas.length > 0) {
+                return {
+                    error: true,
+                    mensaje: 'Respuestas incompletas',
+                    faltantes: {
+                        individuales: faltantesIndividuales,
+                        colaborativas: faltantesColaborativas
+                    },
+                    totalRespuestas: {
+                        esperadas: CONFIGURACION_PREGUNTAS.TOTAL_PREGUNTAS,
+                        encontradas: respuestasIndividuales.length + respuestasColaborativas.length
+                    }
+                };
+            }
+
+            // Procesar preguntas con contexto extendido
+            const preguntasAnalizadas = [
+                ...this.procesarRespuestasColaborativasConChat(respuestasColaborativas, userId),
+                ...this.procesarRespuestasIndividuales(respuestasIndividuales)
+            ].sort((a, b) => a.preguntaId - b.preguntaId);
+
+            // Analizar patrones
+            const patrones = this.analizarPatronesRespuesta(preguntasAnalizadas);
+
+            const prompt = `
+                Eres un profesor experto en pensamiento crítico que proporciona feedback detallado y personalizado.
+                Analizarás las respuestas del estudiante considerando múltiples dimensiones y su evolución.
+
+                Para cada respuesta, considera:
+                1. El tipo de pregunta y sus objetivos específicos
+                2. Las habilidades de pensamiento crítico demostradas
+                3. La profundidad del análisis y argumentación
+                4. En preguntas colaborativas, la calidad del diálogo y construcción conjunta
+
+                Información del estudiante:
+                ${JSON.stringify(patrones, null, 2)}
+
+                Análisis de respuestas:
+                ${preguntasAnalizadas.map((p) => `
+                Pregunta ${p.preguntaId}
+                ${JSON.stringify(CONTEXTO_EXTENDIDO[p.preguntaId], null, 2)}
+                
+                Pregunta: ${p.pregunta}
+                Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
+                Respuesta del estudiante: ${p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal}
+                
+                ${p.tipo === 'colaborativa' && p.historialChat ? `
+                Proceso de diálogo:
+                ${p.historialChat.map(msg => `${msg.emisor}: ${msg.mensaje}`).join('\n')}
+                ` : ''}
+                `).join('\n---\n')}
+
+                Proporciona:
+                1. Análisis detallado de cada respuesta considerando el contexto y objetivos específicos
+                2. Evaluación de las habilidades de pensamiento crítico demostradas
+                3. Patrones identificados en el estilo de respuesta y argumentación
+                4. Sugerencias específicas para mejorar en cada dimensión
+                5. Para respuestas colaborativas, análisis de la calidad del diálogo
+                6. Recomendaciones personalizadas basadas en el perfil del estudiante
+                
+                Mantén un tono constructivo y motivador, destacando tanto fortalezas como áreas de mejora.
+            `;
+
+            const completion = await this.openai.chat.completions.create({
+                messages: [{ role: 'user', content: prompt }],
+                model: 'gpt-4-0613',
+                temperature: 0.7,
+                max_tokens: 2000
+            });
+
+            return {
+                feedbackAcumulado: completion.choices[0].message.content,
+                resumenEstadistico: {
+                    totalPreguntas: CONFIGURACION_PREGUNTAS.TOTAL_PREGUNTAS,
+                    preguntasIndividuales: respuestasIndividuales.length,
+                    preguntasColaborativas: respuestasColaborativas.length,
+                    preguntasAnalizadas: preguntasAnalizadas.length
+                },
+                preguntasAnalizadas,
+                patrones
+            };
+
+        } catch (error) {
+            console.error('Error generando feedback acumulado:', error);
+            throw new Error(`Error al generar el feedback acumulado: ${error.message}`);
+        }
+    }
+    analizarPatronesRespuesta(preguntas) {
+        let patrones = {
+            longitudPromedio: 0,
+            usoPensamientoCritico: 0,
+            participacionColaborativa: 0,
+            fundamentacion: 0,
+            consistenciaArgumentativa: 0
+        };
+
+        preguntas.forEach(p => {
+            const respuesta = p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal;
+            
+            // Análisis de longitud
+            patrones.longitudPromedio += respuesta.length;
+
+            // Análisis de pensamiento crítico
+            const palabrasCriticas = ['porque', 'ya que', 'debido a', 'por lo tanto', 'sin embargo', 'aunque'];
+            palabrasCriticas.forEach(palabra => {
+                if (respuesta.toLowerCase().includes(palabra)) {
+                    patrones.usoPensamientoCritico++;
+                }
+            });
+
+            // Análisis de fundamentación
+            const indicadoresFundamentacion = ['por ejemplo', 'como se ve en', 'esto se evidencia', 'según'];
+            indicadoresFundamentacion.forEach(ind => {
+                if (respuesta.toLowerCase().includes(ind)) {
+                    patrones.fundamentacion++;
+                }
+            });
+
+            // Análisis de participación colaborativa
+            if (p.tipo === 'colaborativa' && p.historialChat) {
+                patrones.participacionColaborativa += p.historialChat.filter(
+                    msg => msg.emisor === 'Estudiante'
+                ).length;
+            }
+
+            // Análisis de consistencia argumentativa
+            const estructurasArgumentativas = [
+                'en primer lugar', 'en segundo lugar', 'por un lado', 'por otro lado',
+                'en conclusión', 'en resumen', 'finalmente'
+            ];
+            estructurasArgumentativas.forEach(estructura => {
+                if (respuesta.toLowerCase().includes(estructura)) {
+                    patrones.consistenciaArgumentativa++;
+                }
+            });
+        });
+
+        // Normalizar valores
+        const totalPreguntas = preguntas.length;
+        patrones.longitudPromedio = Math.round(patrones.longitudPromedio / totalPreguntas);
+        patrones.usoPensamientoCritico = Math.round((patrones.usoPensamientoCritico / totalPreguntas) * 10);
+        patrones.fundamentacion = Math.round((patrones.fundamentacion / totalPreguntas) * 10);
+        patrones.participacionColaborativa = Math.min(10, Math.round(patrones.participacionColaborativa / 2));
+        patrones.consistenciaArgumentativa = Math.round((patrones.consistenciaArgumentativa / totalPreguntas) * 10);
+
+        return patrones;
+    }
     async generateGeneralFeedback(userId) {
         try {
             if (!userId) {

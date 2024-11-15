@@ -449,7 +449,10 @@ app.get('/feedback', (req, res) => {
 app.get('/feedback-elaborado', (req, res) => {
     res.render('feedback/feedback-elaborado');
 });
-
+// En tu archivo de rutas del frontend
+app.get('/feedback-acumulativo', (req, res) => {
+    res.render('feedback/feedback-acumulado');
+});
 
 app.get('/test-openai', (req, res) => {
     res.render('test-openai');
