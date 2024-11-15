@@ -11,9 +11,18 @@
     <nav class="navbar">
         <div class="navbar-content">
             <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
-            <button id="cerrarSesion">Cerrar Sesión</button>
+            <div class="nav-buttons">
+                <button id="feedbackBtn" class="feedback-btn">Feedback</button>
+                <button id="cerrarSesion">Cerrar Sesión</button>
+            </div>
         </div>
     </nav>
+    <!-- Agregar este div para el menú desplegable después de la barra de navegación -->
+<div id="feedbackMenu" class="feedback-menu">
+    <a href="/feedback">Feedback General</a>
+    <a href="/feedback-elaborado">Feedback Elaborado</a>
+    <a href="/feedback-acumulativo">Feedback Acumulativo</a>
+</div>
 
     <div class="main-container">
         <div class="levels-container">
@@ -75,11 +84,28 @@
             window.location.href = '/login';
         };
     
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded evento disparado');
-            displayUserInfo();
-            document.getElementById('cerrarSesion').addEventListener('click', cerrarSesion);
-        });
+        // Agregar este código al script existente
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded evento disparado');
+    displayUserInfo();
+    
+    const feedbackBtn = document.getElementById('feedbackBtn');
+    const feedbackMenu = document.getElementById('feedbackMenu');
+    
+    // Manejar clic en el botón de feedback
+    feedbackBtn.addEventListener('click', () => {
+        feedbackMenu.classList.toggle('show');
+    });
+    
+    // Cerrar el menú cuando se hace clic fuera de él
+    document.addEventListener('click', (event) => {
+        if (!feedbackBtn.contains(event.target) && !feedbackMenu.contains(event.target)) {
+            feedbackMenu.classList.remove('show');
+        }
+    });
+
+    document.getElementById('cerrarSesion').addEventListener('click', cerrarSesion);
+});
     </script>
 
 </body>

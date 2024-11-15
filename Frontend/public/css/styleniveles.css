@@ -180,6 +180,57 @@ body::after {
     width: 80%;
     display: block;
 }
+/* Estilos para los botones de navegación */
+.nav-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Estilo para el botón de feedback */
+.feedback-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.feedback-btn:hover {
+    background-color: #45a049;
+}
+
+/* Estilos para el menú desplegable de feedback */
+.feedback-menu {
+    display: none;
+    position: absolute;
+    top: 70px;
+    right: 120px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.feedback-menu.show {
+    display: block;
+}
+
+.feedback-menu a {
+    display: block;
+    padding: 12px 20px;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.feedback-menu a:hover {
+    background-color: #f5f5f5;
+    color: #3f87a6;
+}
 
 
 .level-card .button:hover {
