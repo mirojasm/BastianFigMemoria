@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="resources/css/styleretroalimentacion.css">
+    <title>Mi Aplicación</title>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
+            <div class="nav-buttons">
+                <button id="cerrarSesion">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="levels-container">
+            <div class="level-card">
+                <h3>Retroalimentación autonoma (general)</h3>
+                <div class="description-container">
+                    <p>Esta retroalimentación esta orientada solamente para que observes si en las actividades que has respondido, has respondido
+                        como se esperaba o no.
+                    </p>
+                </div>
+                <a href="/feedback" class="button">Ingresar</a>
+            </div>
+            <div class="level-card">
+                <h3>Retroalimentacion elaborado</h3>
+                <div class="description-container">
+                    <p>Esta retroalimentación esta orientada a indicarte de manera mas extensa en base a tus respuestas que necesitas para mejorar las habilidades
+                        de pensamiento critico.
+                    </p>
+                </div>
+                <a href="/feedback-elaborado" class="button">Ingresar</a>
+            </div>
+            <div class="level-card">
+                <h3>Retroalimentacion Acumulativa</h3>
+                <div class="description-container">
+                    <p>Esta retroalimentacion esta orientada a indicarte de manera mas extensa y personalizada en base a patrones que has tenido durante el
+                        desarrollo de estas actividades.
+                    </p>
+                </div>
+                <a href="/feedback-acumulativo" class="button">Ingresar</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Script iniciado');
+    
+        // Función para obtener la información del usuario del localStorage
+        const getUserInfo = () => {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        };
+    
+        // Función para mostrar la información del usuario en el navbar
+        const displayUserInfo = () => {
+            const userInfoString = localStorage.getItem('userInfo');
+            console.log('UserInfo en localStorage:', userInfoString);
+            if (userInfoString) {
+                const userInfo = JSON.parse(userInfoString);
+                console.log('UserInfo parseado:', userInfo);
+
+                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+            } else {
+                console.log('No se encontró información del usuario en localStorage');
+            }
+        };
+    
+        // Función para cerrar sesión
+        const cerrarSesion = () => {
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        };
+    
+        // Agregar este código al script existente
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded evento disparado');
+    displayUserInfo();
+    
+    const feedbackBtn = document.getElementById('feedbackBtn');
+    const feedbackMenu = document.getElementById('feedbackMenu');
+    
+    // Manejar clic en el botón de feedback
+    feedbackBtn.addEventListener('click', () => {
+        feedbackMenu.classList.toggle('show');
+    });
+    
+    // Cerrar el menú cuando se hace clic fuera de él
+    document.addEventListener('click', (event) => {
+        if (!feedbackBtn.contains(event.target) && !feedbackMenu.contains(event.target)) {
+            feedbackMenu.classList.remove('show');
+        }
+    });
+
+    document.getElementById('cerrarSesion').addEventListener('click', cerrarSesion);
+});
+    </script>
+
+</body>
+</html>

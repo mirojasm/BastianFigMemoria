@@ -438,6 +438,12 @@ app.get("/actividadnivel2/pregunta2nivel2", (req, res) => {
 app.get("/levels", (req, res) => {
 	res.render("levels/niveles");
 });
+app.get("/level2", (req, res) => {
+	res.render("levels/nivel2");
+});
+app.get("/level3", (req, res) => {
+	res.render("levels/nivel3");
+});
 app.get('/completion', (req, res) => {
     res.render('actividad/completion');
 });
@@ -452,6 +458,9 @@ app.get('/feedback-elaborado', (req, res) => {
 // En tu archivo de rutas del frontend
 app.get('/feedback-acumulativo', (req, res) => {
     res.render('feedback/feedback-acumulado');
+});
+app.get('/menuretro', (req, res) => {
+    res.render('vistaretroali/retroalimentacion.ejs');
 });
 
 app.get('/test-openai', (req, res) => {
