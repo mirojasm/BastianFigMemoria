@@ -161,8 +161,19 @@ function addMessageToChat(data) {
     contentElement.classList.add("message-content");
     contentElement.textContent = data.message;
 
+    // Agregar timestamp al mensaje
+    const timestampElement = document.createElement("div");
+    timestampElement.classList.add("message-timestamp");
+    const messageTime = new Date().toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    timestampElement.textContent = messageTime;
+
     messageElement.appendChild(authorElement);
     messageElement.appendChild(contentElement);
+    messageElement.appendChild(timestampElement);
+
     chatMessages.appendChild(messageElement);
     scrollChatToBottom();
 }

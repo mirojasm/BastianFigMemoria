@@ -121,52 +121,44 @@ function hideWaitingMessage() {
 
 // Modificar la función addMessageToChat para mostrar los nombres
 function addMessageToChat(data) {
-	// Verificar si el mensaje es duplicado considerando el contenido Y el autor
-	const existingMessages = chatMessages.querySelectorAll(".chat-message");
-	const isDuplicate = Array.from(existingMessages).some((msg) => {
-		const content = msg.querySelector(".message-content").textContent;
-		const author = msg.querySelector(".message-author").textContent;
-		const currentAuthor =
-			data.userId === socket.id ? "Tú" : data.userName || "Compañero";
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("chat-message");
 
-		return content === data.message && author === currentAuthor;
-	});
+    const authorElement = document.createElement("div");
+    authorElement.classList.add("message-author");
 
-	if (isDuplicate) {
-		console.log("Mensaje duplicado detectado, ignorando...");
-		return;
-	}
+    if (data.userId === socket.id) {
+        messageElement.classList.add("own-message");
+        authorElement.textContent = "Tú";
+    } else {
+        messageElement.classList.add("partner-message");
+        authorElement.textContent = data.userName || "Compañero";
+    }
 
-	const messageElement = document.createElement("div");
-	messageElement.classList.add("chat-message");
+    // Agregar timestamp como identificador único
+    const timestamp = new Date().getTime();
+    messageElement.dataset.timestamp = timestamp;
+    messageElement.dataset.author = data.userId;
 
-	const authorElement = document.createElement("div");
-	authorElement.classList.add("message-author");
+    const contentElement = document.createElement("div");
+    contentElement.classList.add("message-content");
+    contentElement.textContent = data.message;
 
-	if (data.userId === socket.id) {
-		messageElement.classList.add("own-message");
-		authorElement.textContent = "Tú";
-	} else {
-		messageElement.classList.add("partner-message");
-		authorElement.textContent = data.userName || "Compañero";
-	}
+    // Agregar timestamp al mensaje
+    const timestampElement = document.createElement("div");
+    timestampElement.classList.add("message-timestamp");
+    const messageTime = new Date().toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    timestampElement.textContent = messageTime;
 
-	const contentElement = document.createElement("div");
-	contentElement.classList.add("message-content");
-	contentElement.textContent = data.message;
-	// Agregar timestamp al mensaje
-	const timestampElement = document.createElement("div");
-	timestampElement.classList.add("message-timestamp");
-	const messageTime = new Date().toLocaleTimeString("es-ES", {
-		hour: "2-digit",
-		minute: "2-digit",
-	});
-	timestampElement.textContent = messageTime;
-	messageElement.appendChild(authorElement);
-	messageElement.appendChild(contentElement);
+    messageElement.appendChild(authorElement);
+    messageElement.appendChild(contentElement);
+    messageElement.appendChild(timestampElement);
 
-	chatMessages.appendChild(messageElement);
-	scrollChatToBottom();
+    chatMessages.appendChild(messageElement);
+    scrollChatToBottom();
 }
 
 function scrollChatToBottom() {
