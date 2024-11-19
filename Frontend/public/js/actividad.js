@@ -217,8 +217,7 @@ socket.on("stop-typing", () => {
 // Modificar el event listener del botón submit
 submitButton.addEventListener("click", () => {
     const answer = finalAnswer.value.trim();
-    if (answer && !hasSubmitted) {
-        hasSubmitted = true;
+    if (answer ) {
         submitButton.disabled = true;
         
         // Guardar la respuesta en localStorage para mostrarla en el feedback
@@ -240,9 +239,9 @@ submitButton.addEventListener("click", () => {
 });
 
 // Agregar nuevo evento para manejar cuando el compañero está listo
-socket.on("partner-ready", (data) => {
+/* socket.on("partner-ready", (data) => {
     showMessage(`${data.userName} ha enviado su respuesta.`);
-});
+}); */
 
 // Agregar nuevos event listeners para la transición
 socket.on("user-ready", (data) => {

@@ -272,6 +272,12 @@ socket.on("ready-for-next-activity", async (data) => {
                 answer,
                 userInfo.token
             );
+			roomState.currentActivity = 2;
+			// Notificar a ambos usuarios y comenzar la transición
+			io.to(roomId).emit("start-activity-transition", {
+				nextActivity: 2,
+				roomId: roomId
+			});
             console.log("Respuesta guardada exitosamente");
         } catch (error) {
             console.error("Error al guardar respuesta:", error);
@@ -283,7 +289,7 @@ socket.on("ready-for-next-activity", async (data) => {
     }
 
     // Verificar si ambos usuarios han enviado sus respuestas
-    if (userResponses[roomId].size === 2) {
+    /* if (userResponses[roomId].size === 2) {
         roomState.bothUsersSubmitted = true;
         roomState.currentActivity = 2;
 
@@ -295,7 +301,7 @@ socket.on("ready-for-next-activity", async (data) => {
 
         // Limpiar las respuestas para la siguiente actividad
         userResponses[roomId].clear();
-    }
+    } */
 });
 
 	// Añadir este nuevo evento para manejar la reconexión en actividad2
