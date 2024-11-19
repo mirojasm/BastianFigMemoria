@@ -246,6 +246,28 @@ socket.on("partner-reconnected", () => {
 // Gestión de respuesta final
 submitButton.addEventListener("click", () => {
     const answer = finalAnswer.value.trim();
+    if (!answer) {
+        alert("Por favor, escribe una respuesta antes de enviar.");
+        return;
+    }
+
+    // Deshabilitar el botón inmediatamente para prevenir doble envío
+    submitButton.disabled = true;
+    
+    // Mostrar mensaje de espera
+    showWaitingMessage("Enviando respuesta...");
+    
+    // Guardar la respuesta en localStorage por si acaso
+    localStorage.setItem('activity2Response', answer);
+    
+    // Emitir el evento de completado
+    socket.emit("activity2-complete", { 
+        roomId,
+        answer
+    });
+});
+/* submitButton.addEventListener("click", () => {
+    const answer = finalAnswer.value.trim();
     if (answer) {
         socket.emit("activity2-complete", { roomId, answer });
         submitButton.disabled = true;
@@ -253,16 +275,34 @@ submitButton.addEventListener("click", () => {
     } else {
         alert("Por favor, escribe una respuesta antes de enviar.");
     }
-});
+}); */
 
-socket.on("redirect-to-completion", () => {
+/* socket.on("redirect-to-completion", () => {
     showWaitingMessage("¡Actividades completadas! Redirigiendo...");
     setTimeout(() => {
         socket.disconnect();
         window.location.replace("/completion");
     }, 2000);
-});
+}); */
+socket.on("redirect-to-completion", () => {
+    showWaitingMessage("¡Actividad completada! Redirigiendo...");
+    
+    // Asegurar que la redirección ocurra
+    const redirectTimeout = setTimeout(() => {
+        window.location.href = "/completion";
+    }, 2000);
 
+    // Backup por si el timeout falla
+    window.addEventListener('beforeunload', () => {
+        clearTimeout(redirectTimeout);
+    });
+});
+// Agregar manejo de errores
+socket.on("error", (data) => {
+    alert(data.message);
+    submitButton.disabled = false;
+    hideWaitingMessage();
+});
 // Edición colaborativa
 let isEditingFinalAnswer = false;
 

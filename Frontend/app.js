@@ -57,6 +57,19 @@ const getRoomState = (roomId) => {
     }
     return rooms[roomId];
 };
+// Función auxiliar para manejar el estado de la sala
+const getRoomState2 = (roomId) => {
+    if (!rooms[roomId]) {
+        rooms[roomId] = {
+            users: new Set(),
+            collaborationId: null,
+            currentActivity: 2,
+            responses: new Map(), // Almacena las respuestas de los usuarios
+            bothUsersSubmitted: false
+        };
+    }
+    return rooms[roomId];
+};
 
 io.on("connection", async (socket) => {
 	console.log("Un usuario se ha conectado", socket.id);
@@ -351,7 +364,7 @@ socket.on("reconnect-to-activity2", async ({ roomId }) => {
         });
     }
 });
-socket.on("activity2-complete", async (data) => {
+/* socket.on("activity2-complete", async (data) => {
     const userInfo = connectedUsers.get(socket.id);
     const roomId = data.roomId;
     const answer = data.answer;
@@ -380,8 +393,53 @@ socket.on("activity2-complete", async (data) => {
             message: "Error al guardar la respuesta"
         });
     }
-});
+}); */
 
+// Modificar el manejador del evento activity2-complete
+socket.on("activity2-complete", async (data) => {
+    const userInfo = connectedUsers.get(socket.id);
+    const roomId = data.roomId;
+    const answer = data.answer;
+    const roomState = getRoomState2(roomId);
+
+    // Evitar múltiples envíos o redirecciones en proceso
+    if (roomState.hasSubmittedResponse || roomState.redirectInProgress) {
+        return;
+    }
+
+    try {
+        // Marcar que estamos en proceso de redirección
+        roomState.redirectInProgress = true;
+        roomState.hasSubmittedResponse = true;
+
+        // Guardar la respuesta
+        await colaboracionService.guardarRespuesta(
+            roomState.collaborationId,
+            2,
+            answer,
+            userInfo.token
+        );
+        console.log("Respuesta de actividad 2 guardada exitosamente");
+
+        // Notificar a todos los usuarios en la sala para redirigir
+        io.to(roomId).emit("redirect-to-completion");
+        
+        // Limpiar la sala después de un tiempo prudente
+        setTimeout(() => {
+            if (rooms[roomId]) {
+                delete rooms[roomId];
+            }
+        }, 3000);
+
+    } catch (error) {
+        console.error("Error al guardar respuesta:", error);
+        roomState.redirectInProgress = false;
+        roomState.hasSubmittedResponse = false;
+        socket.emit("error", {
+            message: "Error al guardar la respuesta"
+        });
+    }
+});
 	socket.on("disconnect", (reason) => {
 		console.log(`Usuario desconectado: ${socket.id}, Razón: ${reason}`);
 		const userInfo = connectedUsers.get(socket.id);
