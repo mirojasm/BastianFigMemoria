@@ -70,6 +70,18 @@ model respuestas_finales {
   @@index([pregunta_id], map: "pregunta_id")
 }
 
+model feedback_usuario {
+  id            Int       @id @default(autoincrement())
+  usuario_id    Int
+  tipo_feedback String    @db.VarChar(20)
+  contenido     String    @db.Text
+  timestamp     DateTime? @default(now()) @db.Timestamp(0)
+  usuario       usuarios  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "feedback_usuario_ibfk_1")
+
+  @@index([usuario_id], map: "idx_usuario_id")
+  @@index([usuario_id, tipo_feedback], map: "idx_usuario_tipo")
+}
+
 model usuarios {
   id                                                              Int                       @id @default(autoincrement())
   nombre                                                          String?                   @db.VarChar(100)
@@ -77,6 +89,7 @@ model usuarios {
   curso                                                           Int?
   contrasena                                                      String?                   @db.VarChar(255)
   establecimiento                                                 String?                   @db.VarChar(255)
+  feedbacks                                                       feedback_usuario[]
   mensajes_chat                                                   mensajes_chat[]
   parejas_colaboracion_parejas_colaboracion_usuario1_idTousuarios parejas_colaboracion[]    @relation("parejas_colaboracion_usuario1_idTousuarios")
   parejas_colaboracion_parejas_colaboracion_usuario2_idTousuarios parejas_colaboracion[]    @relation("parejas_colaboracion_usuario2_idTousuarios")
