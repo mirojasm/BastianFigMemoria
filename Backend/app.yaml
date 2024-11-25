@@ -15,7 +15,7 @@ automatic_scaling:
 
 env_variables:
   NODE_ENV: "production"
-  DATABASE_URL: "mysql://root:memoria-db-2024@104.196.172.106:3306/Memoriadb"
+  DATABASE_URL: "mysql://root:memoria-db-2024@localhost/Memoriadb?socket=/cloudsql/absolute-pulsar-438601-p2:us-east1:memoria-db-2024"
   JWT_SECRET: "tu_clave_secreta_muy_segura"
   JWT_EXPIRATION: "1d"
   CORS_ORIGIN: "https://absolute-pulsar-438601-p2.appspot.com"

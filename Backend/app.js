@@ -53,7 +53,14 @@ app.use('/api', preguntasdividualesRoutes);
 // Rutas API
 app.use('/api/feedback', feedbackRoutes);
 app.use(errorHandler);
-
+app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok',
+      timestamp: new Date(),
+      service: 'backend',
+      project: 'absolute-pulsar-438601-p2'
+    });
+  });
 const PORT = process.env.PORT || 3001;
 
 
