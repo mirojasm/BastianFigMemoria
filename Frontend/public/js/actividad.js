@@ -120,7 +120,7 @@ function hideWaitingMessage() {
 }
 
 // Modificar la función addMessageToChat para mostrar los nombres
-function addMessageToChat(data) {
+/* function addMessageToChat(data) {
     const messageElement = document.createElement("div");
     messageElement.classList.add("chat-message");
 
@@ -159,8 +159,47 @@ function addMessageToChat(data) {
 
     chatMessages.appendChild(messageElement);
     scrollChatToBottom();
-}
+} */
+// En actividad.js - Modificar addMessageToChat
+function addMessageToChat(data) {
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("chat-message");
 
+    const authorElement = document.createElement("div");
+    authorElement.classList.add("message-author");
+
+    if (data.userId === socket.id) {
+        messageElement.classList.add("own-message");
+        authorElement.textContent = "Tú";
+    } else {
+        messageElement.classList.add("partner-message");
+        authorElement.textContent = data.userName || "Compañero";
+    }
+
+    // Agregar el ID real del usuario como atributo de datos
+    messageElement.dataset.realUserId = data.realUserId;
+    messageElement.dataset.timestamp = new Date().getTime();
+    messageElement.dataset.author = data.userId;
+
+    const contentElement = document.createElement("div");
+    contentElement.classList.add("message-content");
+    contentElement.textContent = data.message;
+
+    const timestampElement = document.createElement("div");
+    timestampElement.classList.add("message-timestamp");
+    const messageTime = new Date().toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    timestampElement.textContent = messageTime;
+
+    messageElement.appendChild(authorElement);
+    messageElement.appendChild(contentElement);
+    messageElement.appendChild(timestampElement);
+
+    chatMessages.appendChild(messageElement);
+    scrollChatToBottom();
+}
 function scrollChatToBottom() {
 	chatMessages.scrollTop = chatMessages.scrollHeight;
 }

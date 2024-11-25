@@ -142,7 +142,7 @@ function hideWaitingMessage() {
 }
 
 // Gestión del chat
-function addMessageToChat(data) {
+/* function addMessageToChat(data) {
     const messageElement = document.createElement("div");
     messageElement.classList.add("chat-message");
 
@@ -176,19 +176,77 @@ function addMessageToChat(data) {
 
     chatMessages.appendChild(messageElement);
     scrollChatToBottom();
+} */
+    function addMessageToChat(data) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("chat-message");
+    
+        const authorElement = document.createElement("div");
+        authorElement.classList.add("message-author");
+    
+        if (data.userId === socket.id) {
+            messageElement.classList.add("own-message");
+            authorElement.textContent = "Tú";
+        } else {
+            messageElement.classList.add("partner-message");
+            authorElement.textContent = data.userName || "Compañero";
+        }
+    
+        // Agregar el ID real del usuario y timestamp como atributos de datos
+        messageElement.dataset.realUserId = data.realUserId;
+        messageElement.dataset.timestamp = new Date().getTime();
+        messageElement.dataset.author = data.userId;
+    
+        const contentElement = document.createElement("div");
+        contentElement.classList.add("message-content");
+        contentElement.textContent = data.message;
+    
+        const timestampElement = document.createElement("div");
+        timestampElement.classList.add("message-timestamp");
+        const messageTime = new Date().toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+        timestampElement.textContent = messageTime;
+    
+        messageElement.appendChild(authorElement);
+        messageElement.appendChild(contentElement);
+        messageElement.appendChild(timestampElement);
+    
+        chatMessages.appendChild(messageElement);
+        scrollChatToBottom();
 }
-
 function scrollChatToBottom() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function sendMessage() {
+/* function sendMessage() {
     const message = chatInput.value.trim();
     if (message) {
         socket.emit("chat-message", {
             roomId,
             message,
             timestamp: new Date().toISOString(),
+        });
+
+        chatInput.value = "";
+        chatInput.focus();
+        socket.emit("stop-typing", { roomId });
+    }
+} */
+// Modificar la función sendMessage para incluir información adicional del usuario
+function sendMessage() {
+    const message = chatInput.value.trim();
+    if (message) {
+        // Obtener la información del usuario del localStorage
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        
+        socket.emit("chat-message", {
+            roomId,
+            message,
+            timestamp: new Date().toISOString(),
+            userName: userInfo.nombre,
+            realUserId: userInfo.id // Incluir el ID real del usuario
         });
 
         chatInput.value = "";
@@ -215,12 +273,21 @@ chatInput.addEventListener("keypress", (e) => {
     }
 });
 
-// Socket event handlers para el chat
+/* // Socket event handlers para el chat
 socket.on("chat-message", (data) => {
     console.log("Mensaje recibido:", data);
     addMessageToChat(data);
+}); */
+// Modificar el event listener del chat-message
+socket.on("chat-message", (data) => {
+    console.log("Mensaje recibido:", data);
+    // Asegurarse de que los datos incluyan toda la información necesaria
+    const messageData = {
+        ...data,
+        realUserId: data.realUserId || data.userId // Asegurarse de que siempre haya un ID de usuario
+    };
+    addMessageToChat(messageData);
 });
-
 socket.on("typing", () => {
     typingIndicator.style.display = "block";
 });

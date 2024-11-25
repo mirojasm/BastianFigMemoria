@@ -201,7 +201,7 @@ io.on("connection", async (socket) => {
 		}
 	});
 
-	socket.on("chat-message", async (data) => {
+	/* socket.on("chat-message", async (data) => {
 		const userInfo = connectedUsers.get(socket.id);
 		const roomId = userInfo.room;
 
@@ -235,8 +235,42 @@ io.on("connection", async (socket) => {
 				}
 			}
 		}
+	}); */
+	socket.on("chat-message", async (data) => {
+		const userInfo = connectedUsers.get(socket.id);
+		const roomId = userInfo.room;
+	
+		if (roomId && rooms[roomId]) {
+			console.log(`Mensaje recibido de ${userInfo.nombre} en sala ${roomId}`);
+	
+			if (rooms[roomId].collaborationId) {
+				try {
+					// Asegurarse de enviar el ID del usuario real, no el socket.id
+					await colaboracionService.guardarMensaje(
+						rooms[roomId].collaborationId,
+						userInfo.userId, // Usar el ID real del usuario
+						data.message,
+						userInfo.token
+					);
+	
+					const messageData = {
+						userId: socket.id,
+						userName: userInfo.nombre,
+						message: data.message,
+						timestamp: new Date().toISOString(),
+						realUserId: userInfo.userId // Agregar el ID real del usuario
+					};
+	
+					io.to(roomId).emit("chat-message", messageData);
+				} catch (error) {
+					console.error("Error al guardar mensaje:", error);
+					socket.emit("error", {
+						message: "Error al guardar el mensaje"
+					});
+				}
+			}
+		}
 	});
-
 	socket.on("update-final-answer", (data) => {
 		const roomId = data.roomId;
 		if (rooms[roomId]) {

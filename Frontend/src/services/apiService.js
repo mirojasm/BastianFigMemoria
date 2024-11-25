@@ -24,7 +24,7 @@ export const colaboracionService = {
 		}
 	},
 
-	guardarMensaje: async (chatId, userId, contenido, token) => {
+	/* guardarMensaje: async (chatId, userId, contenido, token) => {
 		try {
 			const response = await fetch(`${API_URL}/chats/mensaje`, {
 				method: "POST",
@@ -44,8 +44,34 @@ export const colaboracionService = {
 			console.error("Error en guardarMensaje:", error);
 			throw error;
 		}
+	}, */
+	guardarMensaje: async (chatId, userId, contenido, token) => {
+		try {
+			const response = await fetch(`${API_URL}/chats/mensaje`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					chat_colaborativo_id: chatId,
+					usuario_id: userId, // Asegurarse de que este es el ID real del usuario
+					contenido: contenido,
+					timestamp: new Date().toISOString()
+				}),
+			});
+	
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || "Error al guardar mensaje");
+			}
+	
+			return await response.json();
+		} catch (error) {
+			console.error("Error en guardarMensaje:", error);
+			throw error;
+		}
 	},
-
 	guardarRespuesta: async (collaborationId, preguntaId, respuesta, token) => {
 		try {
 			console.log("Enviando respuesta final:", {
