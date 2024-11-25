@@ -1,0 +1,27 @@
+runtime: nodejs20
+service: backend
+env: standard
+instance_class: F1
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 1
+  min_idle_instances: automatic
+  max_idle_instances: 0
+  min_pending_latency: automatic
+  max_pending_latency: automatic
+  target_cpu_utilization: 0.6
+  target_throughput_utilization: 0.6
+
+env_variables:
+  NODE_ENV: "production"
+  DATABASE_URL: "mysql://root:memoria-db-2024@104.196.172.106:3306/Memoriadb"
+  JWT_SECRET: "tu_clave_secreta_muy_segura"
+  JWT_EXPIRATION: "1d"
+  CORS_ORIGIN: "https://absolute-pulsar-438601-p2.appspot.com"
+  FRONTEND_URL: "https://absolute-pulsar-438601-p2.appspot.com"
+
+handlers:
+  - url: /.*
+    script: auto
+    secure: always

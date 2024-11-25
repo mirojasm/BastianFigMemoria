@@ -1,0 +1,32 @@
+runtime: nodejs20
+service: default
+env: standard
+instance_class: F1
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 1
+  min_idle_instances: automatic
+  max_idle_instances: 0
+  min_pending_latency: automatic
+  max_pending_latency: automatic
+  target_cpu_utilization: 0.6
+  target_throughput_utilization: 0.6
+
+env_variables:
+  NODE_ENV: "production"
+  BACKEND_URL: "https://backend-dot-absolute-pulsar-438601-p2.appspot.com"
+
+handlers:
+  - url: /(.*\.(gif|png|jpg|css|js|webp|svg))$
+    static_files: public/\1
+    upload: public/.*\.(gif|png|jpg|css|js|webp|svg)$
+    secure: always
+
+  - url: /resources
+    static_dir: public/resources
+    secure: always
+
+  - url: /.*
+    script: auto
+    secure: always

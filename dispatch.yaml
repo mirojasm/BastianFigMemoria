@@ -1,0 +1,11 @@
+dispatch:
+  # Rutas para el backend
+  - url: "*/api/*"
+    service: backend
+  
+  - url: "*/auth/*"
+    service: backend
+
+  # Todas las demás solicitudes van al frontend
+  - url: "*/*"
+    service: default
