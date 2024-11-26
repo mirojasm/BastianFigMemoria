@@ -14,7 +14,6 @@
         </div>
 
         <div class="image-container">
-            <!-- <img id="activity-image" src="" alt="Imagen de la actividad"> -->
             <img id="activity-image" src="/resources/images/fotopregunta1.png" alt="Imagen de la actividad">
         </div>
 
@@ -29,7 +28,6 @@
         </div>
     </div>
 
-    <!-- Cargar el servicio de preguntas -->
     <script src="/resources/js/preguntasService.js"></script>
     
     <script>
@@ -39,7 +37,6 @@
             const answerInput = document.getElementById('answer-input');
             const messageContainer = document.getElementById('message-container');
             const preguntaTexto = document.getElementById('pregunta-texto');
-            /* const activityImage = document.getElementById('activity-image'); */
 
             function showMessage(message, type) {
                 messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
@@ -52,20 +49,23 @@
                 return;
             }
 
-            // Cargar pregunta
+            // ID de la pregunta actual
+            const PREGUNTA_ID = 3; // Ajusta este valor según corresponda
+
+            // Cargar pregunta y registrar tiempo de inicio
             try {
-                const pregunta = await preguntasService.getPregunta(3, token);
+                const pregunta = await preguntasService.getPregunta(PREGUNTA_ID, token);
                 preguntaTexto.textContent = pregunta.texto;
-                /* if (pregunta.imagen_url) {
-                    activityImage.src = pregunta.imagen_url;
-                } */
+                
+                // Guardar tiempo de inicio en localStorage
+                localStorage.setItem(`inicio_pregunta_${PREGUNTA_ID}`, new Date().toISOString());
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
             }
 
             // Verificar respuesta existente
             try {
-                const { existeRespuesta, respuesta } = await preguntasService.checkRespuesta(1, token);
+                const { existeRespuesta, respuesta } = await preguntasService.checkRespuesta(PREGUNTA_ID, token);
                 if (existeRespuesta) {
                     answerInput.value = respuesta;
                     answerInput.disabled = true;
@@ -80,7 +80,6 @@
             nextButton.addEventListener('click', () => {
                 window.location.href = '/actividadnivel1/pregunta2nivel1';
             });
-           
 
             submitButton.addEventListener('click', async function() {
                 const respuesta = answerInput.value.trim();
@@ -91,7 +90,7 @@
                 }
 
                 try {
-                    await preguntasService.createRespuesta(3, respuesta, token);
+                    await preguntasService.createRespuesta(PREGUNTA_ID, respuesta, token);
                     showMessage('Respuesta enviada correctamente', 'success');
                     submitButton.disabled = true;
                     answerInput.disabled = true;

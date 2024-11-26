@@ -13,12 +13,8 @@
             <p id="pregunta-texto"></p>
         </div>
 
-        <!-- <div class="text-container">
-            <div id="activity-text"></div>
-        </div> -->
         <div class="image-container">
             <img id="activity-image" src="/resources/images/fotopregunta1.png" alt="Imagen de la actividad">
-            <!-- <img id="activity-image" src="" alt="Imagen de la actividad"> -->
         </div>
 
         <div id="message-container"></div>
@@ -32,7 +28,6 @@
         </div>
     </div>
 
-    <!-- Cargar el servicio de preguntas -->
     <script src="/resources/js/preguntasService.js"></script>
 
     <script>
@@ -42,8 +37,9 @@
             const answerInput = document.getElementById('answer-input');
             const messageContainer = document.getElementById('message-container');
             const preguntaTexto = document.getElementById('pregunta-texto');
-            /* const activityText = document.getElementById('activity-text'); */
-            /* const activityImage = document.getElementById('activity-image'); */
+
+            const PREGUNTA_ID = 4; // ID de la pregunta actual
+
             function showMessage(message, type) {
                 messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
             }
@@ -59,26 +55,37 @@
                 return;
             }
 
-            // Cargar pregunta
-            /* try {
-                const pregunta = await preguntasService.getPregunta(4, token);
-                preguntaTexto.textContent = pregunta.texto;
-                activityText.textContent = pregunta.contenido || pregunta.texto;
-            } catch (error) {
-                showMessage('Error al cargar la pregunta: ' + error.message, 'error');
-            } */
+            // Cargar pregunta y registrar tiempo de inicio
             try {
-                const pregunta = await preguntasService.getPregunta(4, token);
+                const pregunta = await preguntasService.getPregunta(PREGUNTA_ID, token);
                 preguntaTexto.textContent = pregunta.texto;
-                /* if (pregunta.imagen_url) {
-                    activityImage.src = pregunta.imagen_url;
-                } */
+                
+                // Registrar tiempo de inicio solo si no existe
+                if (!localStorage.getItem(`inicio_pregunta_${PREGUNTA_ID}`)) {
+                    localStorage.setItem(`inicio_pregunta_${PREGUNTA_ID}`, new Date().toISOString());
+                    console.log('Tiempo de inicio guardado:', localStorage.getItem(`inicio_pregunta_${PREGUNTA_ID}`));
+                }
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
             }
 
+            // Verificar si ya existe una respuesta
+            try {
+                const { existeRespuesta, respuesta } = await preguntasService.checkRespuesta(PREGUNTA_ID, token);
+                if (existeRespuesta) {
+                    answerInput.value = respuesta;
+                    answerInput.disabled = true;
+                    submitButton.disabled = true;
+                    showMessage('Ya has respondido esta pregunta', 'success');
+                    nextButton.style.display = 'block';
+                    // Limpiar el tiempo de inicio si ya existe una respuesta
+                    localStorage.removeItem(`inicio_pregunta_${PREGUNTA_ID}`);
+                }
+            } catch (error) {
+                console.error('Error al verificar respuesta existente:', error);
+            }
+
             nextButton.addEventListener('click', () => {
-                // Redirigir a la página de niveles
                 window.location.href = '/level2';
             });
 
@@ -91,14 +98,15 @@
                 }
 
                 try {
-                    await preguntasService.createRespuesta(4, respuesta, token);
+                    await preguntasService.createRespuesta(PREGUNTA_ID, respuesta, token);
                     showMessage('Respuesta enviada correctamente', 'success');
                     
                     // Mostrar mensaje de finalización
                     showCompletionMessage();
                     
-                    // Limpiar el input
-                    answerInput.value = '';
+                    // Deshabilitar el input y el botón de enviar
+                    answerInput.disabled = true;
+                    submitButton.disabled = true;
                     
                     // Mostrar el botón para volver a niveles
                     nextButton.style.display = 'block';
@@ -109,6 +117,5 @@
             });
         });
     </script>
-
 </body>
 </html>

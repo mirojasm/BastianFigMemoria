@@ -41,22 +41,41 @@ const preguntasService = {
 
     createRespuesta: async (preguntaId, respuesta, token) => {
         try {
+            // Obtener tiempo de inicio del localStorage
+            const tiempoInicio = localStorage.getItem(`inicio_pregunta_${preguntaId}`);
+            const tiempoFin = new Date().toISOString();
+            
+            // Calcular tiempo de respuesta en segundos
+            const tiempoRespuesta = tiempoInicio ? 
+                Math.floor((new Date(tiempoFin) - new Date(tiempoInicio)) / 1000) : 
+                null;
+
+            const datosRespuesta = {
+                preguntaId: parseInt(preguntaId),
+                respuesta,
+                tiempoRespuesta,
+                inicioRespuesta: tiempoInicio,
+                finRespuesta: tiempoFin
+            };
+
+            console.log('Enviando datos:', datosRespuesta);
+
             const response = await fetch(`${API_URL}/respuestas-individuales`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    preguntaId: parseInt(preguntaId), // Asegurarse de que sea un número
-                    respuesta
-                })
+                body: JSON.stringify(datosRespuesta)
             });
             
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Error al guardar la respuesta');
             }
+            
+            // Limpiar el tiempo de inicio del localStorage
+            localStorage.removeItem(`inicio_pregunta_${preguntaId}`);
             
             return await response.json();
         } catch (error) {

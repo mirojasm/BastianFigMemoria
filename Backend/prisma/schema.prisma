@@ -63,11 +63,16 @@ model respuestas_finales {
   pregunta_id            Int?
   respuesta_final        String?               @db.Text
   timestamp              DateTime?             @db.Timestamp(0)
+  tiempo_respuesta       Int?
+  inicio_respuesta       DateTime?             @db.Timestamp(0)
+  fin_respuesta          DateTime?             @db.Timestamp(0)
   parejas_colaboracion   parejas_colaboracion? @relation(fields: [pareja_colaboracion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_finales_ibfk_2")
   preguntas              preguntas?            @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_finales_ibfk_3")
 
   @@index([pareja_colaboracion_id], map: "pareja_colaboracion_id")
   @@index([pregunta_id], map: "pregunta_id")
+  @@index([inicio_respuesta, fin_respuesta], map: "idx_inicio_fin_respuesta")
+  @@index([tiempo_respuesta], map: "idx_tiempo_respuesta")
 }
 
 model feedback_usuario {
@@ -97,14 +102,19 @@ model usuarios {
 }
 
 model respuestas_individuales {
-  id          Int        @id @default(autoincrement())
-  usuario_id  Int?
-  pregunta_id Int?
-  respuesta   String?    @db.Text
-  timestamp   DateTime?  @db.Timestamp(0)
-  usuarios    usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_individuales_ibfk_1")
-  preguntas   preguntas? @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_individuales_ibfk_2")
+  id               Int        @id @default(autoincrement())
+  usuario_id       Int?
+  pregunta_id      Int?
+  respuesta        String?    @db.Text
+  timestamp        DateTime?  @db.Timestamp(0)
+  tiempo_respuesta Int?
+  inicio_respuesta DateTime?  @db.Timestamp(0)
+  fin_respuesta    DateTime?  @db.Timestamp(0)
+  usuarios         usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_individuales_ibfk_1")
+  preguntas        preguntas? @relation(fields: [pregunta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "respuestas_individuales_ibfk_2")
 
   @@index([pregunta_id], map: "pregunta_id")
   @@index([usuario_id], map: "usuario_id")
+  @@index([inicio_respuesta], map: "idx_inicio_respuesta")
+  @@index([tiempo_respuesta], map: "idx_tiempo_respuesta")
 }

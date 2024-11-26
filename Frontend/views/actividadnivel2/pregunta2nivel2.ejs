@@ -13,9 +13,6 @@
             <p id="pregunta-texto"></p>
         </div>
 
-        <!-- <div class="text-container">
-            <div id="activity-text"></div>
-        </div> -->
         <div class="text-container">
             <div id="activity-text">
                 <p>La primera vez que vi la lluvia fue una tarde de verano en un patio interior. Ese patio era un mundo completo, con una fuente de pajaros en el centro, muchas flores y un viejo naranjo con el tronco blanco. Yo me hallaba contenta contemplando aquel árbol tan raro, cuyas hojas eran como una sustancia verde y tenía algunas frutas tan grandes y redondas como bolas de billar. De pronto escuché un ruido  sobre los techos de las casas vecinas, el cielo se oscureció y empezaron a caer gotas de agua fría, después fue un diluvio.</p>
@@ -34,7 +31,6 @@
         </div>
     </div>
 
-    <!-- Cargar el servicio de preguntas -->
     <script src="/resources/js/preguntasService.js"></script>
 
     <script>
@@ -45,6 +41,8 @@
             const messageContainer = document.getElementById('message-container');
             const preguntaTexto = document.getElementById('pregunta-texto');
             const activityText = document.getElementById('activity-text');
+
+            const PREGUNTA_ID = 6; // ID de la pregunta actual
 
             function showMessage(message, type) {
                 messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
@@ -61,13 +59,34 @@
                 return;
             }
 
-            // Cargar pregunta 6 (segunda pregunta del nivel 2)
+            // Cargar pregunta y registrar tiempo de inicio
             try {
-                const pregunta = await preguntasService.getPregunta(6, token);
+                const pregunta = await preguntasService.getPregunta(PREGUNTA_ID, token);
                 preguntaTexto.textContent = pregunta.texto;
-                /* activityText.textContent = pregunta.contenido || pregunta.texto; */
+                
+                // Registrar tiempo de inicio solo si no existe
+                if (!localStorage.getItem(`inicio_pregunta_${PREGUNTA_ID}`)) {
+                    localStorage.setItem(`inicio_pregunta_${PREGUNTA_ID}`, new Date().toISOString());
+                    console.log('Tiempo de inicio guardado:', localStorage.getItem(`inicio_pregunta_${PREGUNTA_ID}`));
+                }
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
+            }
+
+            // Verificar si ya existe una respuesta
+            try {
+                const { existeRespuesta, respuesta } = await preguntasService.checkRespuesta(PREGUNTA_ID, token);
+                if (existeRespuesta) {
+                    answerInput.value = respuesta;
+                    answerInput.disabled = true;
+                    submitButton.disabled = true;
+                    showMessage('Ya has respondido esta pregunta', 'success');
+                    nextButton.style.display = 'block';
+                    // Limpiar el tiempo de inicio si ya existe una respuesta
+                    localStorage.removeItem(`inicio_pregunta_${PREGUNTA_ID}`);
+                }
+            } catch (error) {
+                console.error('Error al verificar respuesta existente:', error);
             }
 
             nextButton.addEventListener('click', () => {
@@ -83,18 +102,18 @@
                 }
 
                 try {
-                    await preguntasService.createRespuesta(6, respuesta, token);
+                    await preguntasService.createRespuesta(PREGUNTA_ID, respuesta, token);
                     showMessage('Respuesta enviada correctamente', 'success');
                     
                     // Mostrar mensaje de finalización de nivel
                     showCompletionMessage();
                     
-                    // Limpiar el input
-                    answerInput.value = '';
+                    // Deshabilitar input y botón después de enviar
+                    answerInput.disabled = true;
+                    submitButton.disabled = true;
                     
                     // Mostrar el botón para volver a niveles
                     nextButton.style.display = 'block';
-                    
                 } catch (error) {
                     showMessage('Error al enviar la respuesta: ' + error.message, 'error');
                 }
