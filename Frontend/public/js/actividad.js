@@ -6,7 +6,8 @@ const socket = io({
 		userInfo,
 	},
 });
-
+let startTime; // Para guardar cuando el usuario comienza a responder
+let endTime; // Para guardar cuando el usuario termite de responder
 const roomId = document.getElementById("room-id").textContent;
 const waitingOverlay = document.getElementById("waiting-overlay");
 const waitingMessage = document.querySelector(".waiting-message");
@@ -45,9 +46,25 @@ socket.on("disconnect", (reason) => {
 });
 
 socket.on("reconnect", () => {
-	console.log("Reconectado al servidor");
-	socket.emit("reconnect-to-room", roomId);
+    console.log("Reconectado al servidor");
+    socket.emit("reconnect-to-room", roomId);
+    
+    // Si el usuario estaba respondiendo, mantener el tiempo de inicio
+    if (startTime && !endTime) {
+        socket.emit("sync-response-time", {
+            roomId,
+            startTime: startTime.toISOString()
+        });
+    }
 });
+
+// Agregar nuevo evento para sincronizar el tiempo en caso de reconexión
+socket.on("sync-time-data", (timeData) => {
+    if (timeData.startTime) {
+        startTime = new Date(timeData.startTime);
+    }
+});
+
 
 socket.on("waiting-for-partner", () => {
 	showWaitingMessage("Esperando a tu compañero...");
@@ -64,44 +81,46 @@ socket.on("activity-ready", () => {
 	}, 3000);
 });
 function initializeActivity() {
-	console.log("Inicializando actividad");
-	// Mostrar el contenido de la actividad
-	activityContent.style.display = "flex";
-	document.querySelector(".activity-info").style.display = "block";
-	document.querySelector(".image-container").style.display = "block";
+    console.log("Inicializando actividad");
+    // Mostrar el contenido de la actividad
+    activityContent.style.display = "flex";
+    document.querySelector(".activity-info").style.display = "block";
+    document.querySelector(".text-container").style.display = "block";
 
-	// Determinar qué imagen mostrar basado en el orden de conexión
-	socket.emit("get-user-number", roomId);
+    // Determinar qué parte del texto mostrar basado en el orden de conexión
+    socket.emit("get-user-number", roomId);
 }
 
 socket.on("user-number", (number) => {
-	console.log("Recibido número de usuario:", number);
-	if (number === 1) {
-		activityImage1.style.display = "block";
-		activityImage2.style.display = "none";
-	} else {
-		activityImage1.style.display = "none";
-		activityImage2.style.display = "block";
-	}
+    console.log("Recibido número de usuario:", number);
+    if (number === 1) {
+        document.getElementById("text-part-1").style.display = "block";
+        document.getElementById("text-part-2").style.display = "none";
+    } else {
+        document.getElementById("text-part-1").style.display = "none";
+        document.getElementById("text-part-2").style.display = "block";
+    }
 });
 
 socket.on("activity-started", (data) => {
-	hideWaitingMessage();
-	activityContent.style.display = "block";
+    hideWaitingMessage();
+    activityContent.style.display = "block";
 
-	// Mostrar la imagen correspondiente según la asignación del servidor
-	if (data.imageNumber === 1) {
-		activityImage1.style.display = "block";
-		activityImage2.style.display = "none";
-	} else {
-		activityImage1.style.display = "none";
-		activityImage2.style.display = "block";
-	}
-	// Mostrar el contenido de la actividad
-	document.querySelector(".activity-info").style.display = "block";
-	document.querySelector(".final-answer-container").style.display = "block";
-	document.querySelector(".chat-sidebar").style.display = "block";
+    // Mostrar el texto correspondiente según la asignación del servidor
+    if (data.textNumber === 1) {
+        document.getElementById("text-part-1").style.display = "block";
+        document.getElementById("text-part-2").style.display = "none";
+    } else {
+        document.getElementById("text-part-1").style.display = "none";
+        document.getElementById("text-part-2").style.display = "block";
+    }
+    
+    // Mostrar el contenido de la actividad
+    document.querySelector(".activity-info").style.display = "block";
+    document.querySelector(".final-answer-container").style.display = "block";
+    document.querySelector(".chat-sidebar").style.display = "block";
 });
+
 
 function showWaitingMessage(message) {
 	waitingMessage.textContent = message;
@@ -219,6 +238,17 @@ function sendMessage() {
 	}
 }
 
+// Modificar el evento focus del textarea para capturar el inicio
+finalAnswer.addEventListener("focus", () => {
+    if (!startTime) {
+        startTime = new Date();
+        // Emitir el evento de edición existente
+        isEditingFinalAnswer = true;
+        socket.emit("editing-final-answer", { roomId, isEditing: true });
+        collaborativeEditingIndicator.style.display = "none";
+    }
+});
+
 sendMessageButton.addEventListener("click", sendMessage);
 
 chatInput.addEventListener("input", () => {
@@ -256,9 +286,12 @@ socket.on("stop-typing", () => {
 // Modificar el event listener del botón submit
 submitButton.addEventListener("click", () => {
     const answer = finalAnswer.value.trim();
-    if (answer ) {
+    if (answer) {
+		endTime = new Date();
         submitButton.disabled = true;
         
+		// Calcular tiempos
+        const timeSpentInSeconds = Math.floor((endTime - startTime) / 1000);
         // Guardar la respuesta en localStorage para mostrarla en el feedback
         localStorage.setItem('activity1Response', answer);
         
@@ -267,6 +300,11 @@ submitButton.addEventListener("click", () => {
             roomId,
             answer,
             activityNumber: 1,
+            timeData: {
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
+                timeSpent: timeSpentInSeconds
+            }
         });
         
         showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
