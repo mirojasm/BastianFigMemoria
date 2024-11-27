@@ -17,7 +17,6 @@
                 <h2><i class="fas fa-graduation-cap"></i> Ingreso al Aula Virtual</h2>
                 <form id="loginForm">
                     <input type="text" name="user" id="user" placeholder="Ingresa tu usuario" required>
-                    <input type="text" name="establecimiento" id="establecimiento" placeholder="Ingresa tu colegio" required>
                     <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
                     <input type="submit" class="btn-login" value="Login">
                 </form>
@@ -29,33 +28,29 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const user = document.getElementById('user').value;
-            const establecimiento = document.getElementById('establecimiento').value;
             const pass = document.getElementById('pass').value;
 
             try {
-                const response = await fetch('http://localhost:3001/api/auth/login', {
+                const response = await fetch('http://10.0.0.104:3001/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ user, establecimiento, pass }),
+                    body: JSON.stringify({ user, pass }),
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Guarda el token en localStorage o sessionStorage
                     localStorage.setItem('token', data.token);
-                    // Guardar la información del usuario
                     localStorage.setItem('userInfo', JSON.stringify({
                         id: data.id,
                         nombre: data.nombre,
-                        establecimiento: data.establecimiento
+                        establecimiento: data.establecimiento // Mantenemos esto porque aún existe en la BDD
                     }));
                     console.log('Información guardada en localStorage:', {
                         token: localStorage.getItem('token').substring(0, 20) + '...',
                         userInfo: localStorage.getItem('userInfo')
                     });
-                    // Redirige al usuario a la página de niveles
                     window.location.href = '/condicion';
                 } else {
                     const errorData = await response.json();
