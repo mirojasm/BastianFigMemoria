@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="resources/css/condicion.css">
+    <title>Formulario de Asentimiento - Aula Virtual</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
+            <button id="cerrarSesion">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="instruction-card">
+            <h1 class="instruction-title">FORMULARIO DE ASENTIMIENTO PARA ENCUESTA A MENOR DE EDAD</h1>
+            <p class="instruction-subtitle">Avanzando la evaluación y el desarrollo de las habilidades de comunicación, pensamiento crítico, colaboración y creatividad mediante la inteligencia artificial</p>
+            
+            <div class="instruction-content">
+                <p>Estimado estudiante:</p>
+                <p>El propósito de este documento es entregarte toda la información necesaria para que puedas decidir si quieres participar o no en un proyecto de investigación que estamos realizando en tu escuela. El objetivo de este estudio es diseñar, implementar y estudiar actividades digitales que utilizan tecnología para conocer cuáles son tus habilidades de colaboración, comunicación, creatividad y pensamiento crítico, y ayudarte a desarrollarlas.</p>
+                
+                <p>Antes de tomar esta decisión, es importante que sepas lo siguiente:</p>
+                <ul>
+                    <li>Tu participación en este estudio ha sido autorizada por tus padres; sin embargo, si tú prefieres no participar, nadie te puede obligar a hacerlo.</li>
+                    <li>Tu participación consiste en realizar una serie de actividades digitales, como simulaciones y videojuegos, que registrarán tus respuestas y cómo interactúas con ellas.</li>
+                    <li>Nadie conocerá tus respuestas: tu participación será confidencial.</li>
+                    <li>Tus respuestas serán utilizadas únicamente para los fines de esta investigación.</li>
+                    <li>Puedes decidir no participar en cualquier momento, sin ninguna consecuencia para ti.</li>
+                    <li>Si tienes más preguntas, puedes hacerlas a la persona que está dirigiendo la actividad.</li>
+                </ul>
+            </div>
+
+            <div class="buttons-container">
+                <a href="/instructivo" class="button">Comenzar</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Display user information
+            const userInfoString = localStorage.getItem('userInfo');
+            if (userInfoString) {
+                const userInfo = JSON.parse(userInfoString);
+                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+            }
+
+            // Handle logout
+            document.getElementById('cerrarSesion').addEventListener('click', () => {
+                localStorage.removeItem('userInfo');
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            });
+        });
+    </script>
+</body>
+</html>

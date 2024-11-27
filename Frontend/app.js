@@ -17,7 +17,7 @@ const io = new Server(http);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-dotenv.config({ path: "./env/.env" });
+dotenv.config();
 
 app.use("/resources", express.static("public"));
 app.use("/resources", express.static(join(__dirname, "public")));
@@ -503,9 +503,13 @@ socket.on("activity2-complete", async (data) => {
 	});
 });
 
+console.log('API_URL después de dotenv:', process.env.API_URL);
 // Rutas
 app.get("/", (req, res) => {
 	res.render("login/login");
+});
+app.get('/condicion', (req, res) => {
+    res.render('indicaciones/codicion');  // Cambiar a 'codicion' para que coincida
 });
 app.get('/instructivo', (req, res) => {
     res.render('indicaciones/instructivo');
