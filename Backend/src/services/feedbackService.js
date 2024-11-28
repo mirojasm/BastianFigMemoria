@@ -1,3 +1,4 @@
+// acaaaaaa no lo he cambiado
 import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 
@@ -262,7 +263,8 @@ export class FeedbackService {
                 ...this.procesarRespuestasColaborativasConChat(respuestasColaborativas, userId),
                 ...this.procesarRespuestasIndividuales(respuestasIndividuales)
             ].sort((a, b) => a.preguntaId - b.preguntaId);
-    
+            
+            const tiemposRespuesta = this.analizarTiemposRespuesta(preguntasAnalizadas);
             // Analizar patrones
             const patrones = this.analizarPatronesRespuesta(preguntasAnalizadas);
     
@@ -306,6 +308,18 @@ export class FeedbackService {
                 6. Recomendaciones personalizadas basadas en el perfil del estudiante
     
                 Mantén un tono constructivo y motivador, destacando tanto fortalezas como áreas de mejora.
+                Análisis de tiempos:
+            - Tiempo promedio individual: ${Math.round(tiemposRespuesta.promedioIndividual)} segundos
+            - Tiempo promedio colaborativo: ${Math.round(tiemposRespuesta.promedioColaborativo)} segundos
+            - Preguntas más rápidas: ${tiemposRespuesta.preguntasMasRapidas.map(p => 
+                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+            - Preguntas más lentas: ${tiemposRespuesta.preguntasMasLentas.map(p => 
+                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+
+            Incluye en tu análisis:
+            1. Patrones en la distribución del tiempo entre preguntas individuales y colaborativas
+            2. Relación entre tiempo dedicado y calidad de las respuestas
+            3. Sugerencias para optimizar el tiempo de respuesta
             `;
     
             const completion = await this.openai.chat.completions.create({
@@ -610,16 +624,27 @@ export class FeedbackService {
         }
     }
 
-    procesarRespuestasIndividuales(respuestas) {
+    /* procesarRespuestasIndividuales(respuestas) {
         return respuestas.map(resp => ({
             preguntaId: resp.pregunta_id,
             pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
             respuestaIndividual: resp.respuesta,
             tipo: 'individual'
         }));
-    }
+    } */
+        procesarRespuestasIndividuales(respuestas) {
+            return respuestas.map(resp => ({
+                preguntaId: resp.pregunta_id,
+                pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
+                respuestaIndividual: resp.respuesta,
+                tipo: 'individual',
+                tiempoRespuesta: resp.tiempo_respuesta || null,
+                inicioRespuesta: resp.inicio_respuesta || null,
+                finRespuesta: resp.fin_respuesta || null
+            }));
+        }
 
-    procesarRespuestasColaborativas(respuestas, userId) {
+   /*  procesarRespuestasColaborativas(respuestas, userId) {
         return respuestas.map(resp => {
             const pareja = resp.parejas_colaboracion;
             const esUsuario1 = pareja.usuario1_id === userId;
@@ -637,8 +662,29 @@ export class FeedbackService {
                 rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2'
             };
         });
-    }
-
+    } */
+        procesarRespuestasColaborativas(respuestas, userId) {
+            return respuestas.map(resp => {
+                const pareja = resp.parejas_colaboracion;
+                const esUsuario1 = pareja.usuario1_id === userId;
+                
+                const compañero = esUsuario1
+                    ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
+                    : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
+    
+                return {
+                    preguntaId: resp.pregunta_id,
+                    pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
+                    respuestaFinal: resp.respuesta_final,
+                    tipo: 'colaborativa',
+                    compañero: compañero || 'Compañero no asignado',
+                    rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
+                    tiempoRespuesta: resp.tiempo_respuesta || null,
+                    inicioRespuesta: resp.inicio_respuesta || null,
+                    finRespuesta: resp.fin_respuesta || null
+                };
+            });
+        }
     async generateElaboratedFeedback(userId) {
         try {
             if (!userId) {
@@ -752,7 +798,8 @@ export class FeedbackService {
                 ...this.procesarRespuestasColaborativasConChat(respuestasColaborativas, userId),
                 ...this.procesarRespuestasIndividuales(respuestasIndividuales)
             ].sort((a, b) => a.preguntaId - b.preguntaId);
-    
+            
+            const tiemposRespuesta = this.analizarTiemposRespuesta(preguntasAnalizadas);
             const textoContexto = `La primera vez que vi la lluvia fue una tarde de verano en un patio interior. Ese patio era un mundo completo, con una fuente de pajaros en el centro, muchas flores y un viejo naranjo con el tronco blanco. Yo me hallaba contenta contemplando aquel árbol tan raro, cuyas hojas eran como una sustancia verde y tenía algunas frutas tan grandes y redondas como bolas de billar. De pronto escuché un ruido  sobre los techos de las casas vecinas, el cielo se oscureció y empezaron a caer gotas de agua fría, después fue un diluvio. Aquello me pareció extraordinario, un sonido aterrador y maravilloso. El patio se inundó de inmediato, los caminos se convirtieron en pequeños lagos, el naranjo sacudía sus ramas mojadas y enormes gotas rebotaban en el suelo y sobre la fuente. Me acurruqué en un rincón, me encontraba con miedo porque creí que el mundo se estaba rompiendo. Mi madre me tomó en sus brazos para tranquilizarme, me asomó al patio y me dijo que no tuviera miedo, que eso era sólo la lluvia, un fenómeno natural tan lindo como el sol.`;
     
             const prompt = `
@@ -802,6 +849,18 @@ export class FeedbackService {
                 ${p.historialChat.map(msg => `${msg.emisor}: ${msg.mensaje}`).join('\n')}
                 ` : ''}
                 `).join('\n---\n')}
+                Análisis de tiempos de respuesta:
+            - Tiempo promedio en preguntas individuales: ${Math.round(tiemposRespuesta.promedioIndividual)} segundos
+            - Tiempo promedio en preguntas colaborativas: ${Math.round(tiemposRespuesta.promedioColaborativo)} segundos
+            - Preguntas más rápidas: ${tiemposRespuesta.preguntasMasRapidas.map(p => 
+                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+            - Preguntas más lentas: ${tiemposRespuesta.preguntasMasLentas.map(p => 
+                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+
+            Incluye en tu feedback un análisis de los tiempos de respuesta, considerando:
+            1. La diferencia entre tiempos individuales y colaborativos
+            2. Patrones en las preguntas que tomaron más o menos tiempo
+            3. Recomendaciones sobre gestión del tiempo
             `;
     
             const completion = await this.openai.chat.completions.create({
@@ -842,7 +901,7 @@ export class FeedbackService {
     }
     
     // Nuevo método para procesar respuestas colaborativas incluyendo el chat
-    procesarRespuestasColaborativasConChat(respuestas, userId) {
+    /* procesarRespuestasColaborativasConChat(respuestas, userId) {
         return respuestas.map(resp => {
             const pareja = resp.parejas_colaboracion;
             const esUsuario1 = pareja.usuario1_id === userId;
@@ -868,8 +927,111 @@ export class FeedbackService {
                 historialChat
             };
         });
-    }
+    } */
 
+        /* procesarRespuestasColaborativasConChat(respuestas, userId) {
+            return respuestas.map(resp => {
+                const pareja = resp.parejas_colaboracion;
+                const esUsuario1 = pareja.usuario1_id === userId;
+                
+                const compañero = esUsuario1
+                    ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
+                    : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
+        
+                const historialChat = pareja.chats_colaborativos?.[0]?.mensajes_chat.map(mensaje => ({
+                    emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
+                    mensaje: mensaje.contenido,
+                    fecha: mensaje.fecha_envio
+                })) || [];
+        
+                return {
+                    preguntaId: resp.pregunta_id,
+                    pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
+                    respuestaFinal: resp.respuesta_final,
+                    tipo: 'colaborativa',
+                    compañero: compañero || 'Compañero no asignado',
+                    rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
+                    historialChat,
+                    tiempoRespuesta: resp.tiempo_respuesta || null,
+                    inicioRespuesta: resp.inicio_respuesta || null,
+                    finRespuesta: resp.fin_respuesta || null
+                };
+            });
+        } */
+            procesarRespuestasColaborativasConChat(respuestas, userId) {
+                return respuestas.map(resp => {
+                    const pareja = resp.parejas_colaboracion;
+                    const esUsuario1 = pareja.usuario1_id === userId;
+                    
+                    const compañero = esUsuario1
+                        ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
+                        : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
+            
+                    // Obtener todo el historial del chat de la pareja
+                    const historialChat = pareja.chats_colaborativos
+    ?.find(chat => chat.pregunta_id === resp.pregunta_id)
+    ?.mensajes_chat?.map(mensaje => ({
+        emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
+        mensaje: mensaje.contenido,
+        fecha: mensaje.timestamp
+    })) || [];
+            
+                    return {
+                        preguntaId: resp.pregunta_id,
+                        pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
+                        respuestaFinal: resp.respuesta_final,
+                        tipo: 'colaborativa',
+                        compañero: compañero || 'Compañero no asignado',
+                        rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
+                        historialChat, // Ahora incluye todo el historial del chat
+                        tiempoRespuesta: resp.tiempo_respuesta || null,
+                        inicioRespuesta: resp.inicio_respuesta || null,
+                        finRespuesta: resp.fin_respuesta || null
+                    };
+                });
+            }
+        analizarTiemposRespuesta(preguntas) {
+            const tiempos = {
+                promedioIndividual: 0,
+                promedioColaborativo: 0,
+                tiempoTotalIndividual: 0,
+                tiempoTotalColaborativo: 0,
+                preguntasMasRapidas: [],
+                preguntasMasLentas: []
+            };
+    
+            const respuestasIndividuales = preguntas.filter(p => p.tipo === 'individual' && p.tiempoRespuesta);
+            const respuestasColaborativas = preguntas.filter(p => p.tipo === 'colaborativa' && p.tiempoRespuesta);
+    
+            // Calcular promedios
+            if (respuestasIndividuales.length > 0) {
+                tiempos.tiempoTotalIndividual = respuestasIndividuales.reduce((acc, p) => acc + p.tiempoRespuesta, 0);
+                tiempos.promedioIndividual = tiempos.tiempoTotalIndividual / respuestasIndividuales.length;
+            }
+    
+            if (respuestasColaborativas.length > 0) {
+                tiempos.tiempoTotalColaborativo = respuestasColaborativas.reduce((acc, p) => acc + p.tiempoRespuesta, 0);
+                tiempos.promedioColaborativo = tiempos.tiempoTotalColaborativo / respuestasColaborativas.length;
+            }
+    
+            // Identificar preguntas más rápidas y más lentas
+            const todasLasRespuestas = [...preguntas].filter(p => p.tiempoRespuesta);
+            todasLasRespuestas.sort((a, b) => a.tiempoRespuesta - b.tiempoRespuesta);
+    
+            tiempos.preguntasMasRapidas = todasLasRespuestas.slice(0, 2).map(p => ({
+                preguntaId: p.preguntaId,
+                tiempo: p.tiempoRespuesta,
+                tipo: p.tipo
+            }));
+    
+            tiempos.preguntasMasLentas = todasLasRespuestas.slice(-2).map(p => ({
+                preguntaId: p.preguntaId,
+                tiempo: p.tiempoRespuesta,
+                tipo: p.tipo
+            }));
+    
+            return tiempos;
+        }   
     async testOpenAIConnection() {
         try {
             const completion = await this.openai.chat.completions.create({
