@@ -123,7 +123,7 @@ io.on("connection", async (socket) => {
 	}
 
 	socket.on("create-room", () => {
-		const roomId = Math.random().toString(36).substring(7);
+		const roomId = (Math.random().toString(36) + 'A0').slice(2,4).toUpperCase();
 		rooms[roomId] = {
 			users: new Set([socket.id]),
 			collaborationId: null,
@@ -193,6 +193,16 @@ io.on("connection", async (socket) => {
 			socket.emit("error", { message: "Error al unirse a la sala" });
 		}
 	});
+	// esto es para lo nuevoo aa SOLO PARA ACTIVIDAD 1 ME SIRVE
+	socket.on("individual-answer-update", (data) => {
+		const roomId = data.roomId;
+		if (rooms[roomId]) {
+			socket.to(roomId).emit("individual-answer-updated", {
+				content: data.content,
+				studentNumber: data.studentNumber
+			});
+		}
+	});
 
 	socket.on("get-user-number", (roomId) => {
 		if (rooms[roomId] && rooms[roomId].users.has(socket.id)) {
@@ -201,41 +211,7 @@ io.on("connection", async (socket) => {
 		}
 	});
 
-	/* socket.on("chat-message", async (data) => {
-		const userInfo = connectedUsers.get(socket.id);
-		const roomId = userInfo.room;
-
-		if (roomId && rooms[roomId]) {
-			console.log(
-				`Mensaje recibido de ${userInfo.nombre} en sala ${roomId}`
-			);
-
-			if (rooms[roomId].collaborationId) {
-				try {
-					await colaboracionService.guardarMensaje(
-						rooms[roomId].collaborationId,
-						userInfo.userId,
-						data.message,
-						userInfo.token
-					);
-
-					const messageData = {
-						userId: socket.id,
-						userName: userInfo.nombre,
-						message: data.message,
-						timestamp: new Date().toISOString(),
-					};
-
-					io.to(roomId).emit("chat-message", messageData);
-				} catch (error) {
-					console.error("Error al guardar mensaje:", error);
-					socket.emit("error", {
-						message: "Error al guardar el mensaje",
-					});
-				}
-			}
-		}
-	}); */
+	
 	socket.on("chat-message", async (data) => {
 		const userInfo = connectedUsers.get(socket.id);
 		const roomId = userInfo.room;
