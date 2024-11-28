@@ -200,7 +200,7 @@ export class FeedbackService {
             });
     
             // Obtener respuestas colaborativas con chat
-            const respuestasColaborativas = await prisma.respuestas_finales.findMany({
+            /* const respuestasColaborativas = await prisma.respuestas_finales.findMany({
                 where: {
                     parejas_colaboracion: {
                         OR: [
@@ -230,8 +230,8 @@ export class FeedbackService {
                 orderBy: {
                     pregunta_id: 'asc'
                 }
-            });
-    
+            }); */
+            const respuestasColaborativas = await this.obtenerRespuestasColaborativas(userId);
             // Validaciones
             const respuestasIndividualesIds = respuestasIndividuales.map(r => r.pregunta_id);
             const respuestasColaborativasIds = respuestasColaborativas.map(r => r.pregunta_id);
@@ -685,6 +685,55 @@ export class FeedbackService {
                 };
             });
         }
+    // Método para obtener respuestas colaborativas
+async obtenerRespuestasColaborativas(userId) {
+    try {
+        const respuestas = await prisma.respuestas_finales.findMany({
+            where: {
+                pregunta_id: {
+                    in: CONFIGURACION_PREGUNTAS.COLABORATIVAS
+                },
+                parejas_colaboracion: {
+                    OR: [
+                        { usuario1_id: userId },
+                        { usuario2_id: userId }
+                    ]
+                }
+            },
+            include: {
+                preguntas: true,
+                parejas_colaboracion: {
+                    include: {
+                        usuarios_parejas_colaboracion_usuario1_idTousuarios: true,
+                        usuarios_parejas_colaboracion_usuario2_idTousuarios: true,
+                        chats_colaborativos: {
+                            where: {
+                                pregunta_id: {
+                                    in: CONFIGURACION_PREGUNTAS.COLABORATIVAS
+                                }
+                            },
+                            include: {
+                                mensajes_chat: {
+                                    orderBy: {
+                                        timestamp: 'asc'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                pregunta_id: 'asc'
+            }
+        });
+
+        return respuestas;
+    } catch (error) {
+        console.error('Error obteniendo respuestas colaborativas:', error);
+        throw error;
+    }
+}
     async generateElaboratedFeedback(userId) {
         try {
             if (!userId) {
@@ -730,9 +779,9 @@ export class FeedbackService {
                     pregunta_id: 'asc'
                 }
             });
-    
+            
             // Obtener respuestas colaborativas con historial de chat
-            const respuestasColaborativas = await prisma.respuestas_finales.findMany({
+           /*  const respuestasColaborativas = await prisma.respuestas_finales.findMany({
                 where: {
                     pregunta_id: {
                         in: CONFIGURACION_PREGUNTAS.COLABORATIVAS
@@ -765,8 +814,8 @@ export class FeedbackService {
                 orderBy: {
                     pregunta_id: 'asc'
                 }
-            });
-    
+            }); */
+            const respuestasColaborativas = await this.obtenerRespuestasColaborativas(userId);
             // Validar respuestas completas
             const respuestasIndividualesIds = respuestasIndividuales.map(r => r.pregunta_id);
             const respuestasColaborativasIds = respuestasColaborativas.map(r => r.pregunta_id);
@@ -900,81 +949,37 @@ export class FeedbackService {
         }
     }
     
-    // Nuevo método para procesar respuestas colaborativas incluyendo el chat
-    /* procesarRespuestasColaborativasConChat(respuestas, userId) {
-        return respuestas.map(resp => {
-            const pareja = resp.parejas_colaboracion;
-            const esUsuario1 = pareja.usuario1_id === userId;
-            
-            const compañero = esUsuario1
-                ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
-                : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
-    
-            // Procesar el historial del chat
-            const historialChat = pareja.chats_colaborativos?.[0]?.mensajes_chat.map(mensaje => ({
-                emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
-                mensaje: mensaje.contenido,
-                fecha: mensaje.fecha_envio
-            })) || [];
-    
-            return {
-                preguntaId: resp.pregunta_id,
-                pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
-                respuestaFinal: resp.respuesta_final,
-                tipo: 'colaborativa',
-                compañero: compañero || 'Compañero no asignado',
-                rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
-                historialChat
-            };
-        });
-    } */
-
-        /* procesarRespuestasColaborativasConChat(respuestas, userId) {
-            return respuestas.map(resp => {
-                const pareja = resp.parejas_colaboracion;
-                const esUsuario1 = pareja.usuario1_id === userId;
-                
-                const compañero = esUsuario1
-                    ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
-                    : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
-        
-                const historialChat = pareja.chats_colaborativos?.[0]?.mensajes_chat.map(mensaje => ({
-                    emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
-                    mensaje: mensaje.contenido,
-                    fecha: mensaje.fecha_envio
-                })) || [];
-        
-                return {
-                    preguntaId: resp.pregunta_id,
-                    pregunta: resp.preguntas?.texto || 'Sin texto de pregunta',
-                    respuestaFinal: resp.respuesta_final,
-                    tipo: 'colaborativa',
-                    compañero: compañero || 'Compañero no asignado',
-                    rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
-                    historialChat,
-                    tiempoRespuesta: resp.tiempo_respuesta || null,
-                    inicioRespuesta: resp.inicio_respuesta || null,
-                    finRespuesta: resp.fin_respuesta || null
-                };
-            });
-        } */
             procesarRespuestasColaborativasConChat(respuestas, userId) {
+                // Asegurarse de que respuestas es un array
+                if (!Array.isArray(respuestas)) {
+                    console.error('respuestas no es un array:', respuestas);
+                    return [];
+                }
+            
                 return respuestas.map(resp => {
                     const pareja = resp.parejas_colaboracion;
+                    if (!pareja) {
+                        console.warn('No se encontró pareja de colaboración para la respuesta:', resp);
+                        return null;
+                    }
+            
                     const esUsuario1 = pareja.usuario1_id === userId;
                     
                     const compañero = esUsuario1
                         ? pareja.usuarios_parejas_colaboracion_usuario2_idTousuarios?.nombre
                         : pareja.usuarios_parejas_colaboracion_usuario1_idTousuarios?.nombre;
             
-                    // Obtener todo el historial del chat de la pareja
-                    const historialChat = pareja.chats_colaborativos
-    ?.find(chat => chat.pregunta_id === resp.pregunta_id)
-    ?.mensajes_chat?.map(mensaje => ({
-        emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
-        mensaje: mensaje.contenido,
-        fecha: mensaje.timestamp
-    })) || [];
+                    // Encontrar el chat correspondiente a esta pregunta
+                    const chatRelevante = pareja.chats_colaborativos?.find(
+                        chat => chat.pregunta_id === resp.pregunta_id
+                    );
+            
+                    // Procesar los mensajes del chat
+                    const historialChat = chatRelevante?.mensajes_chat?.map(mensaje => ({
+                        emisor: mensaje.usuario_id === userId ? 'Estudiante' : 'Compañero',
+                        mensaje: mensaje.contenido,
+                        fecha: mensaje.timestamp
+                    })) || [];
             
                     return {
                         preguntaId: resp.pregunta_id,
@@ -983,12 +988,12 @@ export class FeedbackService {
                         tipo: 'colaborativa',
                         compañero: compañero || 'Compañero no asignado',
                         rolEstudiante: esUsuario1 ? 'Usuario 1' : 'Usuario 2',
-                        historialChat, // Ahora incluye todo el historial del chat
+                        historialChat,
                         tiempoRespuesta: resp.tiempo_respuesta || null,
                         inicioRespuesta: resp.inicio_respuesta || null,
                         finRespuesta: resp.fin_respuesta || null
                     };
-                });
+                }).filter(Boolean); // Eliminar cualquier resultado null
             }
         analizarTiemposRespuesta(preguntas) {
             const tiempos = {
