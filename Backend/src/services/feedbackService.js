@@ -269,57 +269,72 @@ export class FeedbackService {
             const patrones = this.analizarPatronesRespuesta(preguntasAnalizadas);
     
             const prompt = `
-                Eres un docente experto en pensamiento crítico que proporciona feedback detallado y personalizado.
-                Analizarás las respuestas del estudiante considerando múltiples dimensiones y su evolución.
-    
-                Para cada respuesta, considera:
-                1. El tipo de pregunta y sus objetivos específicos
-                2. Las habilidades de pensamiento crítico demostradas
-                3. La profundidad del análisis y argumentación
-                4. En preguntas colaborativas, la calidad del diálogo y construcción conjunta
-    
-                Información del estudiante:
+                Eres un docente experto que proporciona feedback sobre las respuestas de los estudiantes que se encuentran en el curso de primero medio en la educación chilena.
+                Tu tarea es ayudar a los estudiantes a mejorar su pensamiento crítico, dando una respuesta detallada y personalizada. Esto basándose en las respuestas esperadas que se proporcionan, 
+                no obstante, solo tomalo como referencia. También debes dar  una respuesta que  proporcione lo siguiente:
+
+                1.Análisis detallado de cada respuesta
+                2.Aspectos positivos en cada respuesta
+                3.En las preguntas colaborativas, haz comentarios si el diálogo del chat colaborativo ayudó a tener una mejor respuesta.
+                4.Observaciones de las habilidades de pensamiento crítico en las respuestas
+                5.Sugerencias de mejoras específicas
+                6.Patrones identificados en el estilo de respuesta del estudiante
+                7.Recomendación personalizada basada en el estudiante
+                8.Observar y dar comentarios sobre el tiempo que conllevo a responder cada pregunta.
+                9.Relación entre tiempo dedicado y calidad de las respuestas
+
+                A continuación se encuentra el contexto de las preguntas colaborativas 1 y 2, ambas tratan 
+                sobre el siguiente texto:
+                Había una vez una Rana que quería ser una Rana auténtica, y
+                todos los días se esforzaba en ello.
+                Al principio se compró un espejo en el que se miraba largamente
+                buscando su ansiada autenticidad.
+                Unas veces parecía encontrarla y otras no, según el humor de
+                ese día o de la hora, hasta que se cansó de esto y guardó el espejo
+                en un baúl.
+                Por fin pensó que la única forma de conocer su propio valor estaba en la opinión de la gente, y comenzó a peinarse y a vestirse y a
+                desvestirse (cuando no le quedaba otro recurso) para saber si los
+                demás la aprobaban y reconocían que era una Rana auténtica.
+                Un día observó que lo que más admiraban de ella era su cuerpo,
+                especialmente sus piernas, de manera que se dedicó a hacer sentadillas y a saltar para tener unas ancas cada vez mejores, y sentía
+                que todos la aplaudían.
+                Y así seguía haciendo esfuerzos hasta que, dispuesta a cualquier cosa para lograr que la consideraran una Rana auténtica, se
+                dejaba arrancar las ancas, y los otros se las comían, y ella todavía
+                alcanzaba a oír con amargura cuando decían que qué buena Rana,
+                que parecía Pollo.
+
+
+                Acá también te proporciono información de los posibles patrones.
                 ${JSON.stringify(patrones, null, 2)}
     
-                Análisis de respuestas:
+                Un contexto extendido de las preguntas.
                 ${preguntasAnalizadas.map((p) => `
                 Pregunta ${p.preguntaId}: ${p.pregunta}
                 Contexto: ${JSON.stringify(CONTEXTO_EXTENDIDO[p.preguntaId], null, 2)}
-    
+                Aca estan las preguntas, además para las preguntas 3,4 y 5,6 con sus respectivos contextos
                 ${[3, 4].includes(p.preguntaId) ? 
                     `\nContexto: La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar.` : ''}
                 ${[5, 6].includes(p.preguntaId) ? 
                     `\nContexto: La primera vez que vi la lluvia fue una tarde de verano en un patio interior. Ese patio era un mundo completo, con una fuente de pajaros en el centro, muchas flores y un viejo naranjo con el tronco blanco. Yo me hallaba contenta contemplando aquel árbol tan raro, cuyas hojas eran como una sustancia verde y tenía algunas frutas tan grandes y redondas como bolas de billar. De pronto escuché un ruido  sobre los techos de las casas vecinas, el cielo se oscureció y empezaron a caer gotas de agua fría, después fue un diluvio. Aquello me pareció extraordinario, un sonido aterrador y maravilloso. El patio se inundó de inmediato, los caminos se convirtieron en pequeños lagos, el naranjo sacudía sus ramas mojadas y enormes gotas rebotaban en el suelo y sobre la fuente. Me acurruqué en un rincón, me encontraba con miedo porque creí que el mundo se estaba rompiendo. Mi madre me tomó en sus brazos para tranquilizarme, me asomó al patio y me dijo que no tuviera miedo, que eso era sólo la lluvia, un fenómeno natural tan lindo como el sol.` : ''}
                 
+                Acá están las respuestas esperadas y las respuestas del estudiante para cada pregunta.
                 Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
                 Respuesta del estudiante: ${p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal}
                 ${p.tipo === 'colaborativa' && p.historialChat ? `
-                Proceso de diálogo:
+                Acá están las conversaciones de los estudiantes, durante las preguntas colaborativas.
                 ${p.historialChat.map(msg => `${msg.emisor}: ${msg.mensaje}`).join('\n')}
                 ` : ''}
                 `).join('\n---\n')}
     
-                Proporciona:
-                1. Análisis detallado de cada respuesta considerando el contexto y objetivos específicos
-                2. Evaluación de las habilidades de pensamiento crítico demostradas
-                3. Patrones identificados en el estilo de respuesta y argumentación
-                4. Sugerencias específicas para mejorar en cada dimensión
-                5. Para respuestas colaborativas, análisis de la calidad del diálogo
-                6. Recomendaciones personalizadas basadas en el perfil del estudiante
-    
-                Mantén un tono constructivo y motivador, destacando tanto fortalezas como áreas de mejora.
-                Análisis de tiempos:
-            - Tiempo promedio individual: ${Math.round(tiemposRespuesta.promedioIndividual)} segundos
-            - Tiempo promedio colaborativo: ${Math.round(tiemposRespuesta.promedioColaborativo)} segundos
-            - Preguntas más rápidas: ${tiemposRespuesta.preguntasMasRapidas.map(p => 
-                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
-            - Preguntas más lentas: ${tiemposRespuesta.preguntasMasLentas.map(p => 
-                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
-
-            Incluye en tu análisis:
-            1. Patrones en la distribución del tiempo entre preguntas individuales y colaborativas
-            2. Relación entre tiempo dedicado y calidad de las respuestas
-            3. Sugerencias para optimizar el tiempo de respuesta
+                Acá están los tiempos que se demoran los estudiantes en responder cada pregunta.
+                - Tiempo promedio individual: ${Math.round(tiemposRespuesta.promedioIndividual)} segundos
+                - Tiempo promedio colaborativo: ${Math.round(tiemposRespuesta.promedioColaborativo)} segundos
+                - Preguntas más rápidas: ${tiemposRespuesta.preguntasMasRapidas.map(p => 
+                    `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+                - Preguntas más lentas: ${tiemposRespuesta.preguntasMasLentas.map(p => 
+                    `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+                
+                Mantén una actitud constructiva, motivadora y destacando las fortalezas como mejoras en el estudiante.
             `;
     
             const completion = await this.openai.chat.completions.create({
@@ -541,13 +556,15 @@ export class FeedbackService {
             }
     
             const prompt = `
-                Eres un docente que proporciona feedback básico sobre las respuestas de los estudiantes.
-                Tu tarea es simplemente indicar si cada respuesta es correcta o incorrecta, basándote en las respuestas esperadas, pero tomalo como referencia solamente.
+                Eres un docente experto que proporciona feedback sobre las respuestas de los estudiantes que se encuentran en el curso de primero medio en la educación chilena.
+                Tu tarea es indicar si cada respuesta es correcta o incorrecta, junto con una pequeña justificación. Esto basándose en las respuestas esperadas que se proporcionan, no obstante, solo tomalo como referencia.
+                También es ayudar a los estudiantes a mejorar sus habilidad de pensamiento crítico, dando una respuesta que  proporcione lo siguiente:
+                1. Si cada respuesta es correcta o incorrecta
+                2. Una breve explicación del porqué están correctas o incorrectas las respuestas del estudiante.
+
                 
-                Aquí están las preguntas, las preguntas 1 y 2 son de caracter colaborativo, la pregunta 1 se basa en una pregunta de evaluacion y tiene dos imagenes la cual la primera
-                imagen se describe: muestra un paisaje natural impresionante. En primer plano, hay varios árboles de pino, enmarcando la vista de un lago de aguas cristalinas y tranquilas, que reflejan las montañas y el cielo como un espejo.  
-                mientras que la segunda imagen muestra una escena contrastante entre naturaleza y contaminación industrial. En primer plano, hay una carretera rodeada de áreas verdes y árboles, que se extiende hacia el fondo de la imagen. Sin embargo, al fondo, se observa una zona industrial con varias chimeneas emitiendo grandes cantidades de humo o vapor al ambiente. Este humo se esparce y cubre parte del paisaje, creando una atmósfera brumosa y densa que afecta la claridad de la escena.
-                La pregunta 2 es de metacognicion y es de un texto el cual es el siguiente:
+                A continuación se encuentra el contexto de las preguntas colaborativas 1 y 2, ambas tratan sobre el siguiente texto:
+
                 Había una vez una Rana que quería ser una Rana auténtica, y
                 todos los días se esforzaba en ello.
                 Al principio se compró un espejo en el que se miraba largamente
@@ -565,7 +582,7 @@ export class FeedbackService {
                 dejaba arrancar las ancas, y los otros se las comían, y ella todavía
                 alcanzaba a oír con amargura cuando decían que qué buena Rana,
                 que parecía Pollo. 
-                y las respuestas del estudiante:
+                Aca estan las preguntas, además para las preguntas 3,4 y 5,6 con sus respectivos contextos
                 
                 ${preguntasAnalizadas.map((p) => `
                 Pregunta ${p.preguntaId}: ${p.pregunta}
@@ -573,25 +590,22 @@ export class FeedbackService {
                     `\nContexto: La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar.` : ''}
                 ${[5, 6].includes(p.preguntaId) ? 
                     `\nContexto: ${textoContexto}` : ''}
-                
+                Acá están las respuestas esperadas y las respuestas del estudiante para cada pregunta.
                 Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
                 Respuesta del estudiante: ${p.tipo === 'individual' ? 
                     p.respuestaIndividual : 
                     p.respuestaFinal}
                 `).join('\n---\n')}
                 
-                Por favor, proporciona un feedback simple indicando únicamente:
-                1. Si cada respuesta es correcta o incorrecta
-                2. El número total de respuestas correctas
-                
-                Mantén el feedback breve y directo, sin explicaciones detalladas.
+                Mantén una actitud  constructiva y  motivadora.
+
             `;
     
             const completion = await this.openai.chat.completions.create({
                 messages: [{ role: 'user', content: prompt }],
                 model: 'gpt-4-0613',
                 temperature: 0.3,
-                max_tokens: 500
+                max_tokens: 600
             });
     
             const feedbackContent = completion.choices[0].message.content;
@@ -852,21 +866,20 @@ async obtenerRespuestasColaborativas(userId) {
             const textoContexto = `La primera vez que vi la lluvia fue una tarde de verano en un patio interior. Ese patio era un mundo completo, con una fuente de pajaros en el centro, muchas flores y un viejo naranjo con el tronco blanco. Yo me hallaba contenta contemplando aquel árbol tan raro, cuyas hojas eran como una sustancia verde y tenía algunas frutas tan grandes y redondas como bolas de billar. De pronto escuché un ruido  sobre los techos de las casas vecinas, el cielo se oscureció y empezaron a caer gotas de agua fría, después fue un diluvio. Aquello me pareció extraordinario, un sonido aterrador y maravilloso. El patio se inundó de inmediato, los caminos se convirtieron en pequeños lagos, el naranjo sacudía sus ramas mojadas y enormes gotas rebotaban en el suelo y sobre la fuente. Me acurruqué en un rincón, me encontraba con miedo porque creí que el mundo se estaba rompiendo. Mi madre me tomó en sus brazos para tranquilizarme, me asomó al patio y me dijo que no tuviera miedo, que eso era sólo la lluvia, un fenómeno natural tan lindo como el sol.`;
     
             const prompt = `
-                Eres un docente experto que proporciona feedback detallado y constructivo sobre las respuestas de los estudiantes.
-                Tu objetivo es ayudar a los estudiantes a mejorar su pensamiento crítico proporcionando:
-                1. Una evaluación detallada de cada respuesta
-                2. Aspectos positivos específicos de cada respuesta
-                3. Sugerencias concretas para mejorar
-                4. Para las preguntas colaborativas, comentarios sobre la calidad del diálogo
-                5. Recomendaciones generales para futuras actividades
-    
-                Aquí están las preguntas y respuestas del estudiante:
-                [Para preguntas 1 y 2:]
-                La pregunta 1 se basa en una pregunta de evaluación y tiene dos imágenes:
-                Imagen 1: muestra un paisaje natural impresionante. En primer plano, hay varios árboles de pino, enmarcando la vista de un lago de aguas cristalinas y tranquilas, que reflejan las montañas y el cielo como un espejo.  
-                Imagen 2: muestra una escena contrastante entre naturaleza y contaminación industrial. En primer plano, hay una carretera rodeada de áreas verdes y árboles, que se extiende hacia el fondo de la imagen. Sin embargo, al fondo, se observa una zona industrial con varias chimeneas emitiendo grandes cantidades de humo o vapor al ambiente. Este humo se esparce y cubre parte del paisaje, creando una atmósfera brumosa y densa que afecta la claridad de la escena.
-    
-                La pregunta 2 es de metacognición y contiene el texto de la Rana que quería ser auténtica: Había una vez una Rana que quería ser una Rana auténtica, y
+                Eres un docente experto que proporciona feedback sobre las respuestas de los estudiantes que se encuentran en el curso de primero medio en la educación chilena.
+                Tu tarea es ayudar a los estudiantes a mejorar su pensamiento crítico, dando una respuesta detallada. Esto basándose en las respuestas esperadas que se proporcionan, 
+                no obstante, solo tomalo como referencia. También debes dar  una respuesta que  proporcione lo siguiente:
+
+                1.Análisis detallado de cada respuesta
+                2.Aspectos positivos en cada respuesta
+                3.En las preguntas colaborativas, haz comentarios si el diálogo del chat colaborativo ayudó a tener una mejor respuesta.
+                4.Observar y dar comentarios sobre el tiempo que conllevo a responder cada pregunta.
+                5.Sugerencias para mejorar
+                6.Recomendaciones generales para futuras actividades.
+
+                A continuación se encuentra el contexto de las preguntas colaborativas 1 y 2, ambas tratan sobre el siguiente texto:
+
+                Había una vez una Rana que quería ser una Rana auténtica, y
                 todos los días se esforzaba en ello.
                 Al principio se compró un espejo en el que se miraba largamente
                 buscando su ansiada autenticidad.
@@ -883,33 +896,36 @@ async obtenerRespuestasColaborativas(userId) {
                 dejaba arrancar las ancas, y los otros se las comían, y ella todavía
                 alcanzaba a oír con amargura cuando decían que qué buena Rana,
                 que parecía Pollo.
-    
+
+                Aca estan las preguntas, además para las preguntas 3,4 y 5,6 con sus respectivos contextos
+
                 ${preguntasAnalizadas.map((p) => `
                 Pregunta ${p.preguntaId}: ${p.pregunta}
                 ${[3, 4].includes(p.preguntaId) ? 
                     `\nContexto: La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar.` : ''}
                 ${[5, 6].includes(p.preguntaId) ? 
                     `\nContexto: ${textoContexto}` : ''}
-                
+
+                Acá están las respuestas esperadas y las respuestas del estudiante para cada pregunta.
+
                 Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
                 Respuesta del estudiante: ${p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal}
                 ${p.tipo === 'colaborativa' && p.historialChat ? `
-                Historial de chat:
+                Acá están las conversaciones de los estudiantes, durante las preguntas colaborativas.
                 ${p.historialChat.map(msg => `${msg.emisor}: ${msg.mensaje}`).join('\n')}
                 ` : ''}
                 `).join('\n---\n')}
-                Análisis de tiempos de respuesta:
-            - Tiempo promedio en preguntas individuales: ${Math.round(tiemposRespuesta.promedioIndividual)} segundos
-            - Tiempo promedio en preguntas colaborativas: ${Math.round(tiemposRespuesta.promedioColaborativo)} segundos
-            - Preguntas más rápidas: ${tiemposRespuesta.preguntasMasRapidas.map(p => 
-                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
-            - Preguntas más lentas: ${tiemposRespuesta.preguntasMasLentas.map(p => 
-                `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
 
-            Incluye en tu feedback un análisis de los tiempos de respuesta, considerando:
-            1. La diferencia entre tiempos individuales y colaborativos
-            2. Patrones en las preguntas que tomaron más o menos tiempo
-            3. Recomendaciones sobre gestión del tiempo
+                Acá están los tiempos que se demoran los estudiantes en responder cada pregunta.
+
+                - Tiempo promedio en preguntas individuales: ${Math.round(tiemposRespuesta.promedioIndividual)} segundos
+                - Tiempo promedio en preguntas colaborativas: ${Math.round(tiemposRespuesta.promedioColaborativo)} segundos
+                - Preguntas más rápidas: ${tiemposRespuesta.preguntasMasRapidas.map(p => 
+                    `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+                - Preguntas más lentas: ${tiemposRespuesta.preguntasMasLentas.map(p => 
+                    `Pregunta ${p.preguntaId} (${p.tipo}): ${p.tiempo} segundos`).join(', ')}
+
+                Mantén una actitud  constructiva, motivadora y destacando las fortalezas como mejoras en el estudiante.
             `;
     
             const completion = await this.openai.chat.completions.create({
