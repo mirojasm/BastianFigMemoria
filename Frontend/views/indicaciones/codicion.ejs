@@ -2,29 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Formulario de Asentimiento para Encuesta a Menor de Edad">
     <link rel="stylesheet" href="resources/css/condicion.css">
     <title>Formulario de Asentimiento - Aula Virtual</title>
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-content">
-            <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
-            <button id="cerrarSesion">Cerrar Sesión</button>
+            <div class="user-info">
+                <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
+            </div>
+            <button id="cerrarSesion" aria-label="Cerrar Sesión">Cerrar Sesión</button>
         </div>
     </nav>
 
-    <div class="main-container">
+    <main class="main-container">
         <div class="instruction-card">
             <h1 class="instruction-title">FORMULARIO DE ASENTIMIENTO PARA ENCUESTA A MENOR DE EDAD</h1>
             <p class="instruction-subtitle">Avanzando la evaluación y el desarrollo de las habilidades de comunicación, pensamiento crítico, colaboración y creatividad mediante la inteligencia artificial</p>
             
             <div class="instruction-content">
-                <p>Estimado estudiante:</p>
-                <p>El propósito de este documento es entregarte toda la información necesaria para que puedas decidir si quieres participar o no en un proyecto de investigación que estamos realizando en tu escuela. El objetivo de este estudio es diseñar, implementar y estudiar actividades digitales que utilizan tecnología para conocer cuáles son tus habilidades de colaboración, comunicación, creatividad y pensamiento crítico, y ayudarte a desarrollarlas.</p>
+                <p class="greeting">Estimado estudiante:</p>
+                <p class="main-text">El propósito de este documento es entregarte toda la información necesaria para que puedas decidir si quieres participar o no en un proyecto de investigación que estamos realizando en tu escuela. El objetivo de este estudio es diseñar, implementar y estudiar actividades digitales que utilizan tecnología para conocer cuáles son tus habilidades de colaboración, comunicación, creatividad y pensamiento crítico, y ayudarte a desarrollarlas.</p>
                 
-                <p>Antes de tomar esta decisión, es importante que sepas lo siguiente:</p>
-                <ul>
+                <p class="important-note">Antes de tomar esta decisión, es importante que sepas lo siguiente:</p>
+                <ul class="important-points">
                     <li>Tu participación en este estudio ha sido autorizada por tus padres; sin embargo, si tú prefieres no participar, nadie te puede obligar a hacerlo.</li>
                     <li>Tu participación consiste en realizar una serie de actividades digitales, como simulaciones y videojuegos, que registrarán tus respuestas y cómo interactúas con ellas.</li>
                     <li>Nadie conocerá tus respuestas: tu participación será confidencial.</li>
@@ -35,27 +38,33 @@
             </div>
 
             <div class="buttons-container">
-                <a href="/instructivo" class="button">Comenzar</a>
+                <a href="/instructivo" class="button" role="button">Comenzar</a>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Display user information
-            const userInfoString = localStorage.getItem('userInfo');
-            if (userInfoString) {
-                const userInfo = JSON.parse(userInfoString);
-                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
-                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
-            }
+            try {
+                // Display user information
+                const userInfoString = localStorage.getItem('userInfo');
+                if (userInfoString) {
+                    const userInfo = JSON.parse(userInfoString);
+                    document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                    document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+                }
 
-            // Handle logout
-            document.getElementById('cerrarSesion').addEventListener('click', () => {
-                localStorage.removeItem('userInfo');
-                localStorage.removeItem('token');
+                // Handle logout
+                document.getElementById('cerrarSesion').addEventListener('click', () => {
+                    localStorage.removeItem('userInfo');
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                });
+            } catch (error) {
+                console.error('Error al cargar la información del usuario:', error);
+                // Redireccionar al login si hay algún error
                 window.location.href = '/login';
-            });
+            }
         });
     </script>
 </body>

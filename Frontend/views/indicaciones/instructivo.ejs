@@ -2,76 +2,84 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Instructivo del Aula Virtual">
     <link rel="stylesheet" href="resources/css/instructivo.css">
     <title>Instructivo - Aula Virtual</title>
-    
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-content">
-            <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
-            <button id="cerrarSesion">Cerrar Sesión</button>
+            <div class="user-info">
+                <h2>Bienvenido, <span id="username">Usuario</span> de <span id="userSchool">Colegio</span></h2>
+            </div>
+            <button id="cerrarSesion" aria-label="Cerrar Sesión">Cerrar Sesión</button>
         </div>
     </nav>
 
-    <div class="main-container">
+    <main class="main-container">
         <div class="instruction-card">
             <h1 class="instruction-title">Instrucciones del Aula Virtual</h1>
             
             <div class="instruction-content">
-                <div class="instruction-step">
+                <div class="instruction-step" role="article">
                     <h3>1. Niveles de Aprendizaje</h3>
-                    <p>La plataforma consta de tres niveles progresivos. Cada nivel tiene actividades que ayudaran a mejorar tu pensamiento critico</p>
+                    <p>La plataforma consta de tres niveles progresivos. Cada nivel tiene actividades que ayudarán a mejorar tu pensamiento crítico.</p>
                 </div>
                 
-                <div class="instruction-step">
+                <div class="instruction-step" role="article">
                     <h3>2. Metodología</h3>
                     <p>Cada nivel incluye actividades interactivas que combinan evaluación y metacognición para fortalecer tu pensamiento crítico.</p>
                 </div>
                 
-                <div class="instruction-step">
+                <div class="instruction-step" role="article">
                     <h3>3. Progreso</h3>
                     <p>Avanza en los niveles, completando las actividades y reflexionando sobre tu aprendizaje en cada etapa.</p>
                 </div>
                 
-                <div class="instruction-step">
+                <div class="instruction-step" role="article">
                     <h3>4. Colaboración</h3>
-                    <p>En el nivel 3, trabajarás con un compañero para resolver desafíos más complejos y desarrollar habilidades colaborativas junto con habilidades de pensamiento critico. Podras conversar con tu compañero y editar su respuesta final en conjunto.</p>
+                    <p>En el nivel 3, trabajarás con un compañero para resolver desafíos más complejos y desarrollar habilidades colaborativas junto con habilidades de pensamiento crítico. Podrás conversar con tu compañero y editar su respuesta final en conjunto.</p>
                 </div>
-                <div class="instruction-step">
+
+                <div class="instruction-step" role="article">
                     <h3>5. Limitaciones</h3>
-                    <p>Debes responder todas las preguntas, primero debes entrar al primer nivel que veras ahora, luego de terminar el nivel 3 puedes observar los determinados tipos de retroalimentacion.</p>
+                    <p>Debes responder todas las preguntas, primero debes entrar al primer nivel que verás ahora, luego de terminar el nivel 3 puedes observar los determinados tipos de retroalimentación.</p>
                 </div>
-                <div class="instruction-step">
-                    <h3>6. Consideracion</h3>
-                    <p>Se espera que tus respuestas sean detalladas y lo mas honestas posibles. Muchas gracias.</p>
+
+                <div class="instruction-step" role="article">
+                    <h3>6. Consideración</h3>
+                    <p>Se espera que tus respuestas sean detalladas y lo más honestas posibles. Muchas gracias.</p>
                 </div>
             </div>
 
             <div class="buttons-container">
-                <!-- <a href="/login" class="button secondary">Volver al Inicio</a> -->
-                <a href="/levels" class="button">Comenzar Aprendizaje</a>
+                <a href="/levels" class="button" role="button">Comenzar Aprendizaje</a>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Mostrar información del usuario
-            const userInfoString = localStorage.getItem('userInfo');
-            if (userInfoString) {
-                const userInfo = JSON.parse(userInfoString);
-                document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
-                document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
-            }
+            try {
+                const userInfoString = localStorage.getItem('userInfo');
+                if (userInfoString) {
+                    const userInfo = JSON.parse(userInfoString);
+                    document.getElementById('username').textContent = userInfo.nombre || 'Usuario';
+                    document.getElementById('userSchool').textContent = userInfo.establecimiento || 'Colegio';
+                } else {
+                    window.location.href = '/login';
+                }
 
-            // Manejar cierre de sesión
-            document.getElementById('cerrarSesion').addEventListener('click', () => {
-                localStorage.removeItem('userInfo');
-                localStorage.removeItem('token');
+                document.getElementById('cerrarSesion').addEventListener('click', () => {
+                    localStorage.removeItem('userInfo');
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                });
+            } catch (error) {
+                console.error('Error al cargar la información del usuario:', error);
                 window.location.href = '/login';
-            });
+            }
         });
     </script>
 </body>

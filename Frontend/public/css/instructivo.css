@@ -11,11 +11,10 @@ html, body {
 }
 
 body {
-    margin: 0;
     display: flex;
     flex-direction: column;
     background: linear-gradient(135deg, #3f87a6, #ebf8e1);
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     position: relative;
 }
 
@@ -23,9 +22,9 @@ body {
 body::before, 
 body::after {
     content: '';
-    position: fixed; /* Cambiado de absolute a fixed */
-    width: 400px;
-    height: 400px;
+    position: fixed;
+    width: clamp(200px, 30vw, 400px);
+    height: clamp(200px, 30vw, 400px);
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     z-index: 0;
@@ -53,7 +52,7 @@ body::after {
 /* Navbar */
 .navbar {
     background: rgba(0, 0, 0, 0.7);
-    padding: 1rem;
+    padding: 0.5rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     z-index: 10;
 }
@@ -69,8 +68,9 @@ body::after {
 
 .navbar h2 {
     color: #fff;
-    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
     margin: 0;
+    line-height: 1.4;
 }
 
 #username, 
@@ -83,44 +83,67 @@ body::after {
     background-color: #dc3545;
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
+    padding: clamp(0.4rem, 1.5vw, 0.75rem) clamp(0.8rem, 2vw, 1.5rem);
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 #cerrarSesion:hover {
     background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+#cerrarSesion:active {
+    transform: translateY(0);
 }
 
 /* Contenedor principal */
 .main-container {
     flex: 1;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     padding: 1rem;
-    min-height: 0; /* Importante para evitar desbordamiento */
+    overflow: hidden;
     position: relative;
+    z-index: 1;
 }
 
 /* Tarjeta de instrucciones */
 .instruction-card {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 15px;
-    padding: 2rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     width: min(95%, 1000px);
-    max-height: calc(100vh - 120px); /* Altura máxima ajustada */
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
-    margin: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #3f87a6 rgba(63, 135, 166, 0.1);
+}
+
+.instruction-card::-webkit-scrollbar {
+    width: 8px;
+}
+
+.instruction-card::-webkit-scrollbar-track {
+    background: rgba(63, 135, 166, 0.1);
+    border-radius: 4px;
+}
+
+.instruction-card::-webkit-scrollbar-thumb {
+    background-color: #3f87a6;
+    border-radius: 4px;
 }
 
 /* Título */
 .instruction-title {
     color: #2c3e50;
-    font-size: clamp(1.5rem, 4vw, 2rem);
-    margin-bottom: 2rem;
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    margin-bottom: 1.5rem;
     text-align: center;
     position: relative;
     padding-bottom: 0.75rem;
@@ -132,7 +155,7 @@ body::after {
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: min(100px, 30%);
+    width: clamp(60px, 10vw, 100px);
     height: 3px;
     background-color: #3f87a6;
     border-radius: 2px;
@@ -142,34 +165,38 @@ body::after {
 .instruction-content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 /* Pasos de instrucción */
 .instruction-step {
     background: rgba(63, 135, 166, 0.1);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 10px;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .instruction-step:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(63, 135, 166, 0.2);
 }
 
 .instruction-step h3 {
     color: #3f87a6;
-    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-    margin-bottom: 1rem;
+    font-size: clamp(1rem, 1.8vw, 1.2rem);
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
 }
 
 .instruction-step p {
     color: #455a64;
-    line-height: 1.6;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    text-align: center;
+    line-height: 1.4;
+    font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+    flex: 1;
 }
 
 /* Contenedor de botones */
@@ -177,27 +204,35 @@ body::after {
     display: flex;
     justify-content: center;
     gap: 1rem;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
 }
 
 /* Botones */
 .button {
     background-color: #3f87a6;
     color: white;
-    padding: 0.75rem 2rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 25px;
     text-decoration: none;
     font-weight: 500;
+    font-size: clamp(0.9rem, 1.5vw, 1rem);
     transition: all 0.3s ease;
     border: 2px solid transparent;
-    min-width: 200px;
+    min-width: 180px;
     text-align: center;
+    cursor: pointer;
 }
 
 .button:hover {
     background-color: #fff;
     color: #3f87a6;
     border-color: #3f87a6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(63, 135, 166, 0.2);
+}
+
+.button:active {
+    transform: translateY(0);
 }
 
 .button.secondary {
@@ -219,6 +254,15 @@ body::after {
         gap: 0.5rem;
     }
 
+    .instruction-card {
+        padding: 1rem;
+        margin: 0.5rem;
+    }
+
+    .instruction-step {
+        padding: 0.75rem;
+    }
+
     .buttons-container {
         flex-direction: column;
         align-items: center;
@@ -228,24 +272,65 @@ body::after {
         width: 100%;
         max-width: 250px;
     }
-
-    .instruction-card {
-        padding: 1.5rem;
-        margin: 0.5rem;
-    }
 }
 
 @media (max-width: 480px) {
-    .instruction-card {
-        padding: 1rem;
+    .main-container {
+        padding: 0.5rem;
     }
 
-    .instruction-step {
-        padding: 1rem;
+    .instruction-title {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .instruction-step h3 {
+        font-size: 1rem;
+    }
+
+    .instruction-step p {
+        font-size: 0.85rem;
     }
 
     .button {
         padding: 0.5rem 1rem;
         min-width: 150px;
+    }
+}
+
+/* Para dispositivos muy pequeños */
+@media (max-height: 600px) {
+    .navbar {
+        padding: 0.25rem;
+    }
+
+    .instruction-card {
+        max-height: calc(100vh - 80px);
+    }
+
+    .instruction-step {
+        padding: 0.75rem;
+    }
+
+    .instruction-step h3 {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Estilos de impresión */
+@media print {
+    body {
+        background: none;
+    }
+
+    .navbar,
+    .buttons-container {
+        display: none;
+    }
+
+    .instruction-card {
+        box-shadow: none;
+        margin: 0;
+        padding: 20px;
     }
 }
