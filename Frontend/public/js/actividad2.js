@@ -20,9 +20,15 @@ const finalAnswer = document.getElementById("final-answer");
 const submitButton = document.getElementById("submit-answer");
 const collaborativeEditingIndicator = document.getElementById("collaborative-editing-indicator");
 const waitingMessage = document.getElementById("waiting-message");
+const individualAnswer = document.getElementById("individual-answer");
 
 let myUserId;
 let myRole = null;
+let myStudentNumber = null;
+let studentContents = {
+    student1: "",
+    student2: ""
+};
 let typingTimer;
 const typingTimeout = 1000;
 
@@ -75,10 +81,12 @@ socket.on("connect", () => {
 // Variable para controlar quién se conectó primero
 let isFirstUser = null;
 
-socket.on("activity2-user-connected", (data) => {
+/* socket.on("activity2-user-connected", (data) => {
     console.log(`Usuario ${data.userName} conectado a la actividad 2`);
     hideWaitingMessage();
-    
+    // Determinar el número de estudiante
+    socket.emit("get-user-number", roomId);
+    activityContent.style.display = "block";
     // Determinar si es el primer usuario en conectarse
     if (isFirstUser === null) {
         isFirstUser = data.userCount === 1;
@@ -99,8 +107,47 @@ socket.on("activity2-user-connected", (data) => {
     }
     
     activityContent.style.display = "block";
-});
+}); */
+socket.on("activity2-user-connected", (data) => {
+    console.log(`Usuario ${data.userName} conectado a la actividad 2`);
+    hideWaitingMessage();
+    
+    // Determinar si es el primer usuario en conectarse
+    if (isFirstUser === null) {
+        isFirstUser = data.userCount === 1;
+        myRole = isFirstUser ? 'first' : 'second';
+        // Asignar el número de estudiante basado en el rol
+        myStudentNumber = myRole === 'first' ? 1 : 2;
+        
+        // Asignar el texto correspondiente
+        if (myRole === 'first') {
+            myText.textContent = firstHalf;
+            partnerText.textContent = "Esperando a tu compañero...";
+            mySectionTitle.textContent = "Tu parte (Primera mitad):";
+            partnerSectionTitle.textContent = "Parte de tu compañero (Segunda mitad):";
+        } else {
+            myText.textContent = secondHalf;
+            partnerText.textContent = firstHalf;
+            mySectionTitle.textContent = "Tu parte (Segunda mitad):";
+            partnerSectionTitle.textContent = "Parte de tu compañero (Primera mitad):";
+        }
 
+        // Inicializar el contenido del estudiante actual
+        const studentKey = `student${myStudentNumber}`;
+        studentContents[studentKey] = individualAnswer.value || '';
+        
+        // Emitir el contenido inicial si existe
+        if (individualAnswer.value) {
+            socket.emit("individual-answer-update", {
+                roomId,
+                content: individualAnswer.value,
+                studentNumber: myStudentNumber
+            });
+        }
+    }
+    
+    activityContent.style.display = "block";
+});
 socket.on("activity2-ready", (data) => {
     console.log("Actividad 2 lista para comenzar");
     hideWaitingMessage();
@@ -112,7 +159,85 @@ socket.on("activity2-ready", (data) => {
         partnerText.textContent = secondHalf;
     }
 });
+// Evento para número de usuario
+// Al recibir el número de estudiante, inicializar su contenido
+/* socket.on("user-number", (number) => {
+    console.log("Recibido número de usuario:", number);
+    myStudentNumber = number;
+    
+    // Inicializar el contenido del estudiante actual
+    const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
+    studentContents[studentKey] = individualAnswer.value;
+    updateFinalAnswer();
+}); */
+// Modificar el evento user-number para que solo actualice si no tenemos número asignado
+socket.on("user-number", (number) => {
+    console.log("Recibido número de usuario:", number);
+    if (!myStudentNumber) {  // Solo actualizar si no tenemos número asignado
+        myStudentNumber = number;
+        const studentKey = `student${myStudentNumber}`;
+        studentContents[studentKey] = individualAnswer.value || '';
+    }
+});
+// Manejar cambios en respuesta individual
+// Manejar cambios en respuesta individual
+individualAnswer.addEventListener("input", () => {
+    const content = individualAnswer.value;
+    const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
+    
+    // Actualizar solo el contenido del usuario actual
+    studentContents[studentKey] = content;
+    
+    // Emitir al otro estudiante
+    socket.emit("individual-answer-update", {
+        roomId,
+        content,
+        studentNumber: myStudentNumber
+    });
+    
+    // Actualizar respuesta conjunta manteniendo ambas respuestas
+    updateFinalAnswer();
+});
+// Escuchar actualizaciones del compañero
+socket.on("individual-answer-updated", (data) => {
+    // Solo actualizar el contenido del otro estudiante
+    const studentKey = data.studentNumber === 1 ? 'student1' : 'student2';
+    if (data.studentNumber !== myStudentNumber) {  // Verificar que sea del otro estudiante
+        studentContents[studentKey] = data.content;
+        updateFinalAnswer();
+    }
+});
 
+/* function updateFinalAnswer() {
+    // Asegurarse de que cada parte mantenga su orden
+    let combinedContent = '';
+    
+    // Siempre mantener el orden: student1 primero, student2 segundo
+    if (studentContents.student1 || studentContents.student2) {
+        combinedContent = [studentContents.student1, studentContents.student2]
+            .filter(content => content) // Eliminar contenidos vacíos
+            .join('\n\n');
+    }
+    
+    finalAnswer.value = combinedContent.trim();
+} */
+    function updateFinalAnswer() {
+        // Asegurarnos de mostrar ambas respuestas en el orden correcto
+        let student1Content = studentContents.student1 || '';
+        let student2Content = studentContents.student2 || '';
+    
+        // Si ambos tienen contenido, usar un separador
+        let combinedContent = '';
+        if (student1Content && student2Content) {
+            combinedContent = `${student1Content}\n\n${student2Content}`;
+        } else {
+            // Si solo uno tiene contenido, mostrar ese
+            combinedContent = student1Content || student2Content;
+        }
+    
+        finalAnswer.value = combinedContent.trim();
+        console.log('Contenido actual:', studentContents); // Para debug
+    }
 // Funciones de UI
 function showWaitingMessage(message) {
     if (waitingMessage) {
@@ -120,8 +245,11 @@ function showWaitingMessage(message) {
         waitingMessage.style.display = "block";
         activityContent.style.opacity = "0.5";
     }
+    if (activityContent) {
+        activityContent.style.opacity = "0.5";
+    }
 }
-
+// funciona todo menos el boton xdxd
 function showMessage(message) {
     const messageElement = document.createElement("div");
     messageElement.className = "status-message";
@@ -136,6 +264,8 @@ function showMessage(message) {
 function hideWaitingMessage() {
     if (waitingMessage) {
         waitingMessage.style.display = "none";
+    }
+    if (activityContent) {
         activityContent.style.display = "block";
         activityContent.style.opacity = "1";
     }
@@ -311,10 +441,11 @@ socket.on("partner-reconnected", () => {
 });
 
 // Gestión de respuesta final
+// Gestión de respuesta final
 submitButton.addEventListener("click", () => {
-    const answer = finalAnswer.value.trim();
-    if (!answer) {
-        alert("Por favor, escribe una respuesta antes de enviar.");
+    const combinedAnswer = finalAnswer.value.trim();
+    if (!combinedAnswer) {
+        alert("Por favor, ambos estudiantes deben contribuir a la respuesta.");
         return;
     }
 
@@ -325,32 +456,21 @@ submitButton.addEventListener("click", () => {
     showWaitingMessage("Enviando respuesta...");
     
     // Guardar la respuesta en localStorage por si acaso
-    localStorage.setItem('activity2Response', answer);
+    localStorage.setItem('activity2Response', combinedAnswer);
     
-    // Emitir el evento de completado
+    // Emitir el evento de completado con todas las respuestas
     socket.emit("activity2-complete", { 
         roomId,
-        answer
+        answer: combinedAnswer,
+        individualAnswers: {
+            student1: studentContents.student1 || '',
+            student2: studentContents.student2 || ''
+        }
     });
 });
-/* submitButton.addEventListener("click", () => {
-    const answer = finalAnswer.value.trim();
-    if (answer) {
-        socket.emit("activity2-complete", { roomId, answer });
-        submitButton.disabled = true;
-        showWaitingMessage("Guardando respuesta...");
-    } else {
-        alert("Por favor, escribe una respuesta antes de enviar.");
-    }
-}); */
 
-/* socket.on("redirect-to-completion", () => {
-    showWaitingMessage("¡Actividades completadas! Redirigiendo...");
-    setTimeout(() => {
-        socket.disconnect();
-        window.location.replace("/completion");
-    }, 2000);
-}); */
+
+
 socket.on("redirect-to-completion", () => {
     showWaitingMessage("¡Actividad completada! Redirigiendo...");
     

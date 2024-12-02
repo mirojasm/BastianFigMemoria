@@ -29,9 +29,19 @@
                     </div> -->
                 </div>
                 <div class="final-answer-container">
-                    <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta"></textarea>
-                    <div id="collaborative-editing-indicator">Tu compañero está editando...</div>
-                    <button id="submit-answer">Enviar Respuesta Final</button>
+                    <!-- Área de respuesta individual -->
+                    <div class="student-answer">
+                        <h3>Tu respuesta individual</h3>
+                        <textarea id="individual-answer" rows="4" placeholder="Escribe tu respuesta individual aquí..."></textarea>
+                    </div>
+                    
+                    <!-- Respuesta conjunta -->
+                    <div class="combined-answer">
+                        <h3>Respuesta conjunta (actualización en tiempo real)</h3>
+                        <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta" readonly></textarea>
+                        <div id="collaborative-editing-indicator">Tu compañero está editando...</div>
+                        <button id="submit-answer">Enviar Respuesta Final</button>
+                    </div>
                 </div>
             </div>
         </div>

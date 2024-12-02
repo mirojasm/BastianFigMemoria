@@ -12,8 +12,6 @@ const roomId = document.getElementById("room-id").textContent;
 const waitingOverlay = document.getElementById("waiting-overlay");
 const waitingMessage = document.querySelector(".waiting-message");
 const activityContent = document.getElementById("activity-content");
-const activityImage1 = document.getElementById("activity-image-1");
-const activityImage2 = document.getElementById("activity-image-2");
 const chatMessages = document.getElementById("chat-messages");
 const chatInput = document.getElementById("chat-input");
 const sendMessageButton = document.getElementById("send-message");
@@ -22,7 +20,14 @@ const submitButton = document.getElementById("submit-answer");
 const collaborativeEditingIndicator = document.getElementById(
 	"collaborative-editing-indicator"
 );
-
+// aca modificare lo nuevo pipipi
+const individualAnswer = document.getElementById("individual-answer");
+const combinedPreview = document.getElementById("combined-preview");
+let studentContents = {
+    student1: "",
+    student2: ""
+};
+let myStudentNumber = null;
 let myUserId;
 let typingTimer;
 const typingTimeout = 1000; // 1 segundo
@@ -55,6 +60,21 @@ socket.on("reconnect", () => {
             roomId,
             startTime: startTime.toISOString()
         });
+    }
+});
+
+// Evento para número de usuario
+socket.on("user-number", (number) => {
+    console.log("Recibido número de usuario:", number);
+    myStudentNumber = number;
+    
+    // Mostrar texto correspondiente
+    if (number === 1) {
+        document.getElementById("text-part-1").style.display = "block";
+        document.getElementById("text-part-2").style.display = "none";
+    } else {
+        document.getElementById("text-part-1").style.display = "none";
+        document.getElementById("text-part-2").style.display = "block";
     }
 });
 
@@ -102,6 +122,43 @@ socket.on("user-number", (number) => {
     }
 });
 
+// Manejar cambios en respuesta individual
+individualAnswer.addEventListener("input", () => {
+    const content = individualAnswer.value;
+    const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
+    
+    // Actualizar contenido local
+    studentContents[studentKey] = content;
+    
+    // Emitir al otro estudiante
+    socket.emit("individual-answer-update", {
+        roomId,
+        content,
+        studentNumber: myStudentNumber
+    });
+    
+    // Actualizar respuesta conjunta
+    updateFinalAnswer();
+});
+// Escuchar actualizaciones del compañero
+socket.on("individual-answer-updated", (data) => {
+    const studentKey = data.studentNumber === 1 ? 'student1' : 'student2';
+    studentContents[studentKey] = data.content;
+    updateFinalAnswer();
+});
+function updateFinalAnswer() {
+    const combinedContent = studentContents.student1 + '\n\n' + studentContents.student2;
+    finalAnswer.value = combinedContent.trim();
+}
+function updateCombinedPreview() {
+    // Actualizar secciones de vista previa
+    document.querySelector("#student1-content .content").textContent = studentContents.student1;
+    document.querySelector("#student2-content .content").textContent = studentContents.student2;
+    
+    // Combinar respuestas para vista previa final
+    finalAnswer.value = `${studentContents.student1}\n\n${studentContents.student2}`.trim();
+}
+
 socket.on("activity-started", (data) => {
     hideWaitingMessage();
     activityContent.style.display = "block";
@@ -138,47 +195,7 @@ function hideWaitingMessage() {
 	}
 }
 
-// Modificar la función addMessageToChat para mostrar los nombres
-/* function addMessageToChat(data) {
-    const messageElement = document.createElement("div");
-    messageElement.classList.add("chat-message");
 
-    const authorElement = document.createElement("div");
-    authorElement.classList.add("message-author");
-
-    if (data.userId === socket.id) {
-        messageElement.classList.add("own-message");
-        authorElement.textContent = "Tú";
-    } else {
-        messageElement.classList.add("partner-message");
-        authorElement.textContent = data.userName || "Compañero";
-    }
-
-    // Agregar timestamp como identificador único
-    const timestamp = new Date().getTime();
-    messageElement.dataset.timestamp = timestamp;
-    messageElement.dataset.author = data.userId;
-
-    const contentElement = document.createElement("div");
-    contentElement.classList.add("message-content");
-    contentElement.textContent = data.message;
-
-    // Agregar timestamp al mensaje
-    const timestampElement = document.createElement("div");
-    timestampElement.classList.add("message-timestamp");
-    const messageTime = new Date().toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-    timestampElement.textContent = messageTime;
-
-    messageElement.appendChild(authorElement);
-    messageElement.appendChild(contentElement);
-    messageElement.appendChild(timestampElement);
-
-    chatMessages.appendChild(messageElement);
-    scrollChatToBottom();
-} */
 // En actividad.js - Modificar addMessageToChat
 function addMessageToChat(data) {
     const messageElement = document.createElement("div");
@@ -284,7 +301,7 @@ socket.on("stop-typing", () => {
 
 // Frontend/public/js/actividad.js - Modificar el manejo de envío de respuestas
 // Modificar el event listener del botón submit
-submitButton.addEventListener("click", () => {
+/* submitButton.addEventListener("click", () => {
     const answer = finalAnswer.value.trim();
     if (answer) {
 		endTime = new Date();
@@ -313,6 +330,25 @@ submitButton.addEventListener("click", () => {
     } else {
         alert("Por favor, escribe una respuesta antes de enviar.");
     }
+}); */
+submitButton.addEventListener("click", () => {
+    const combinedAnswer = finalAnswer.value.trim();
+    if (!combinedAnswer) {
+        alert("Por favor, ambos estudiantes deben contribuir a la respuesta.");
+        return;
+    }
+
+    submitButton.disabled = true;
+    
+    // Emitir evento con respuesta combinada
+    socket.emit("ready-for-next-activity", {
+        roomId,
+        answer: combinedAnswer,
+        individualAnswers: studentContents,
+        activityNumber: 1
+    });
+    
+    showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
 });
 
 // Agregar nuevo evento para manejar cuando el compañero está listo
