@@ -84,11 +84,19 @@ body {
     min-height: 150px;
 }
 
+.answer-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 #answer-input {
     width: 100%;
     flex: 1;
     min-height: 100px;
     padding: 1rem;
+    padding-bottom: 30px; /* Space for counter */
     border: 2px solid #3f87a6;
     border-radius: 8px;
     resize: none;
@@ -101,6 +109,27 @@ body {
     outline: none;
     border-color: #2c3e50;
     box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.2);
+}
+
+/* Character Counter Styles */
+.character-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+    pointer-events: none;
+}
+
+.character-counter.error {
+    color: #dc3545;
+}
+
+#answer-input.invalid {
+    border-color: #dc3545;
 }
 
 /* Buttons Container */
@@ -272,16 +301,5 @@ body {
 
     .buttons-container button {
         padding: 0.4rem 1rem;
-    }
-}
-
-/* Estilos para dispositivos táctiles */
-@media (hover: none) {
-    #answer-input {
-        font-size: 16px; /* Previene zoom en iOS */
-    }
-
-    .buttons-container button:hover {
-        transform: none;
     }
 }

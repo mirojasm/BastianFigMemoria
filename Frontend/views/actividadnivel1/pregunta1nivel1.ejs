@@ -20,9 +20,16 @@
         <div id="message-container"></div>
 
         <div class="answer-container">
-            <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
+            <div class="answer-wrapper">
+                <textarea 
+                    id="answer-input" 
+                    placeholder="Escribe tu respuesta aquí... (mínimo 10 caracteres, máximo 100)"
+                    maxlength="100"
+                ></textarea>
+                <div class="character-counter">0/100</div>
+            </div>
             <div class="buttons-container">
-                <button id="submit-answer">Enviar Respuesta</button>
+                <button id="submit-answer" disabled>Enviar Respuesta</button>
                 <button id="next-activity" class="next-button" style="display: none;">Siguiente Actividad</button>
             </div>
         </div>
@@ -37,6 +44,27 @@
             const answerInput = document.getElementById('answer-input');
             const messageContainer = document.getElementById('message-container');
             const preguntaTexto = document.getElementById('pregunta-texto');
+            const characterCounter = document.querySelector('.character-counter');
+
+            // Character counter functionality
+            function updateCharacterCount() {
+                const currentLength = answerInput.value.length;
+                characterCounter.textContent = `${currentLength}/100`;
+                
+                // Update counter color and input validation
+                if (currentLength < 10 || currentLength > 100) {
+                    characterCounter.classList.add('error');
+                    answerInput.classList.add('invalid');
+                    submitButton.disabled = true;
+                } else {
+                    characterCounter.classList.remove('error');
+                    answerInput.classList.remove('invalid');
+                    submitButton.disabled = false;
+                }
+            }
+
+            // Add input event listener for real-time character counting
+            answerInput.addEventListener('input', updateCharacterCount);
 
             function showMessage(message, type) {
                 messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
@@ -50,14 +78,12 @@
             }
 
             // ID de la pregunta actual
-            const PREGUNTA_ID = 3; // Ajusta este valor según corresponda
+            const PREGUNTA_ID = 3;
 
             // Cargar pregunta y registrar tiempo de inicio
             try {
                 const pregunta = await preguntasService.getPregunta(PREGUNTA_ID, token);
                 preguntaTexto.textContent = pregunta.texto;
-                
-                // Guardar tiempo de inicio en localStorage
                 localStorage.setItem(`inicio_pregunta_${PREGUNTA_ID}`, new Date().toISOString());
             } catch (error) {
                 showMessage('Error al cargar la pregunta: ' + error.message, 'error');
@@ -68,6 +94,7 @@
                 const { existeRespuesta, respuesta } = await preguntasService.checkRespuesta(PREGUNTA_ID, token);
                 if (existeRespuesta) {
                     answerInput.value = respuesta;
+                    updateCharacterCount(); // Update counter for existing response
                     answerInput.disabled = true;
                     submitButton.disabled = true;
                     showMessage('Ya has respondido esta pregunta', 'success');
@@ -84,8 +111,13 @@
             submitButton.addEventListener('click', async function() {
                 const respuesta = answerInput.value.trim();
                 
-                if (!respuesta) {
-                    showMessage('Por favor, escribe una respuesta antes de enviar.', 'error');
+                if (respuesta.length < 10) {
+                    showMessage('La respuesta debe tener al menos 10 caracteres.', 'error');
+                    return;
+                }
+
+                if (respuesta.length > 100) {
+                    showMessage('La respuesta no puede exceder los 100 caracteres.', 'error');
                     return;
                 }
 
@@ -99,6 +131,9 @@
                     showMessage('Error al enviar la respuesta: ' + error.message, 'error');
                 }
             });
+
+            // Initial character count update
+            updateCharacterCount();
         });
     </script>
 </body>

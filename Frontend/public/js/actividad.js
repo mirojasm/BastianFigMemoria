@@ -27,6 +27,8 @@ let studentContents = {
     student1: "",
     student2: ""
 };
+let lastEmittedContent = ""; // Para evitar emisiones duplicadas
+let syncTimeout = null;
 let myStudentNumber = null;
 let myUserId;
 let typingTimer;
@@ -123,7 +125,7 @@ socket.on("user-number", (number) => {
 });
 
 // Manejar cambios en respuesta individual
-individualAnswer.addEventListener("input", () => {
+/* individualAnswer.addEventListener("input", () => {
     const content = individualAnswer.value;
     const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
     
@@ -139,16 +141,88 @@ individualAnswer.addEventListener("input", () => {
     
     // Actualizar respuesta conjunta
     updateFinalAnswer();
+}); */
+// Función mejorada para actualizar el contador
+function updateWordCounter(content, studentKey) {
+    const wordCount = content.trim().length;
+    const countDisplay = document.getElementById(`word-count-${studentKey}`);
+    
+    if (countDisplay) {
+        countDisplay.textContent = `Caracteres: ${wordCount}/100`;
+        countDisplay.style.color = wordCount >= 10 && wordCount <= 100 ? '#00aa00' : '#ff0000';
+    }
+    
+    return wordCount;
+}
+individualAnswer.addEventListener("input", (e) => {
+    const content = e.target.value;
+    const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
+    
+    // Limitar a 100 caracteres
+    if (content.length > 100) {
+        e.target.value = content.slice(0, 100);
+        return;
+    }
+    
+    // Actualizar contenido local
+    studentContents[studentKey] = e.target.value;
+    
+    // Actualizar contador local inmediatamente
+    updateWordCounter(content, studentKey);
+    
+    // Throttle las emisiones del socket para evitar sobrecarga
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+        if (content !== lastEmittedContent) {
+            lastEmittedContent = content;
+            socket.emit("individual-answer-update", {
+                roomId,
+                content: content,
+                studentNumber: myStudentNumber
+            });
+        }
+    }, 300); // Delay de 300ms para throttling
+    
+    // Actualizar vista previa
+    updateFinalAnswer();
 });
+
 // Escuchar actualizaciones del compañero
 socket.on("individual-answer-updated", (data) => {
     const studentKey = data.studentNumber === 1 ? 'student1' : 'student2';
-    studentContents[studentKey] = data.content;
-    updateFinalAnswer();
+    const content = data.content;
+    
+    // Actualizar solo si el contenido es diferente
+    if (studentContents[studentKey] !== content) {
+        studentContents[studentKey] = content;
+        
+        // Si soy el otro estudiante, actualizar el contador
+        if (myStudentNumber !== data.studentNumber) {
+            updateWordCounter(content, studentKey);
+            updateFinalAnswer();
+        }
+    }
 });
 function updateFinalAnswer() {
-    const combinedContent = studentContents.student1 + '\n\n' + studentContents.student2;
-    finalAnswer.value = combinedContent.trim();
+    const student1Content = studentContents.student1.trim();
+    const student2Content = studentContents.student2.trim();
+    
+    const student1Valid = student1Content.length >= 10 && student1Content.length <= 100;
+    const student2Valid = student2Content.length >= 10 && student2Content.length <= 100;
+    
+    // Actualizar contadores para ambos estudiantes
+    updateWordCounter(student1Content, 'student1');
+    updateWordCounter(student2Content, 'student2');
+    
+    if (student1Valid && student2Valid) {
+        finalAnswer.value = `${student1Content}\n\n${student2Content}`;
+        submitButton.disabled = false;
+    } else {
+        finalAnswer.value = student1Content.length === 0 && student2Content.length === 0 ? 
+            "Esperando respuestas..." : 
+            "Ambos estudiantes deben escribir entre 10 y 100 caracteres...";
+        submitButton.disabled = true;
+    }
 }
 function updateCombinedPreview() {
     // Actualizar secciones de vista previa
@@ -332,23 +406,32 @@ socket.on("stop-typing", () => {
     }
 }); */
 submitButton.addEventListener("click", () => {
-    const combinedAnswer = finalAnswer.value.trim();
-    if (!combinedAnswer) {
-        alert("Por favor, ambos estudiantes deben contribuir a la respuesta.");
-        return;
+    const student1Length = studentContents.student1.trim().length;
+    const student2Length = studentContents.student2.trim().length;
+    
+    if (student1Length >= 10 && student1Length <= 100 && 
+        student2Length >= 10 && student2Length <= 100) {
+        
+        const combinedAnswer = finalAnswer.value;
+        
+        if (combinedAnswer.trim()) {
+            submitButton.disabled = true;
+            socket.emit("ready-for-next-activity", {
+                roomId,
+                answer: combinedAnswer,
+                individualAnswers: studentContents,
+                activityNumber: 1
+            });
+            
+            showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
+        }
+    } else {
+        if (student1Length < 10 || student2Length < 10) {
+            alert("Ambos estudiantes deben escribir al menos 10 caracteres.");
+        } else {
+            alert("Las respuestas no deben exceder los 100 caracteres.");
+        }
     }
-
-    submitButton.disabled = true;
-    
-    // Emitir evento con respuesta combinada
-    socket.emit("ready-for-next-activity", {
-        roomId,
-        answer: combinedAnswer,
-        individualAnswers: studentContents,
-        activityNumber: 1
-    });
-    
-    showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
 });
 
 // Agregar nuevo evento para manejar cuando el compañero está listo

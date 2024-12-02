@@ -32,7 +32,17 @@
                     <!-- Área de respuesta individual -->
                     <div class="student-answer">
                         <h3>Tu respuesta individual</h3>
-                        <textarea id="individual-answer" rows="4" placeholder="Escribe tu respuesta individual aquí..."></textarea>
+                        <div class="answer-container">
+                            <textarea 
+                                id="individual-answer" 
+                                rows="4" 
+                                placeholder="Escribe tu respuesta individual aquí... (10-100 caracteres)"
+                            ></textarea>
+                            <div class="word-count-container">
+                                <span id="word-count-student1" class="word-count">Caracteres: 0/100</span>
+                                <span id="word-count-student2" class="word-count">Caracteres: 0/100</span>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Respuesta conjunta -->

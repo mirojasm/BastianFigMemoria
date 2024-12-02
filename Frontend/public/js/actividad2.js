@@ -31,7 +31,22 @@ let studentContents = {
 };
 let typingTimer;
 const typingTimeout = 1000;
+// Variables globales mejoradas para manejo de conteo
+let lastEmittedContent = "";
+let syncTimeout = null;
 
+// Función para actualizar el contador de palabras
+function updateWordCounter(content, studentKey) {
+    const wordCount = content.trim().length;
+    const countDisplay = document.getElementById(`word-count-${studentKey}`);
+    
+    if (countDisplay) {
+        countDisplay.textContent = `Caracteres: ${wordCount}/100`;
+        countDisplay.style.color = wordCount >= 10 && wordCount <= 100 ? '#00aa00' : '#ff0000';
+    }
+    
+    return wordCount;
+}
 // El texto completo y su división
 const fullText = `Había una vez una Rana que quería ser una Rana auténtica, y
 todos los días se esforzaba en ello.
@@ -112,14 +127,11 @@ socket.on("activity2-user-connected", (data) => {
     console.log(`Usuario ${data.userName} conectado a la actividad 2`);
     hideWaitingMessage();
     
-    // Determinar si es el primer usuario en conectarse
     if (isFirstUser === null) {
         isFirstUser = data.userCount === 1;
         myRole = isFirstUser ? 'first' : 'second';
-        // Asignar el número de estudiante basado en el rol
         myStudentNumber = myRole === 'first' ? 1 : 2;
         
-        // Asignar el texto correspondiente
         if (myRole === 'first') {
             myText.textContent = firstHalf;
             partnerText.textContent = "Esperando a tu compañero...";
@@ -132,11 +144,11 @@ socket.on("activity2-user-connected", (data) => {
             partnerSectionTitle.textContent = "Parte de tu compañero (Primera mitad):";
         }
 
-        // Inicializar el contenido del estudiante actual
+        // Inicializar el contenido y contador del estudiante actual
         const studentKey = `student${myStudentNumber}`;
         studentContents[studentKey] = individualAnswer.value || '';
+        updateWordCounter(individualAnswer.value || '', studentKey);
         
-        // Emitir el contenido inicial si existe
         if (individualAnswer.value) {
             socket.emit("individual-answer-update", {
                 roomId,
@@ -181,30 +193,52 @@ socket.on("user-number", (number) => {
 });
 // Manejar cambios en respuesta individual
 // Manejar cambios en respuesta individual
-individualAnswer.addEventListener("input", () => {
-    const content = individualAnswer.value;
+individualAnswer.addEventListener("input", (e) => {
+    const content = e.target.value;
     const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
     
-    // Actualizar solo el contenido del usuario actual
-    studentContents[studentKey] = content;
+    // Limitar a 100 caracteres
+    if (content.length > 100) {
+        e.target.value = content.slice(0, 100);
+        return;
+    }
     
-    // Emitir al otro estudiante
-    socket.emit("individual-answer-update", {
-        roomId,
-        content,
-        studentNumber: myStudentNumber
-    });
+    // Actualizar contenido local
+    studentContents[studentKey] = e.target.value;
     
-    // Actualizar respuesta conjunta manteniendo ambas respuestas
+    // Actualizar contador local inmediatamente
+    updateWordCounter(content, studentKey);
+    
+    // Throttle las emisiones del socket
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+        if (content !== lastEmittedContent) {
+            lastEmittedContent = content;
+            socket.emit("individual-answer-update", {
+                roomId,
+                content: content,
+                studentNumber: myStudentNumber
+            });
+        }
+    }, 300); // Delay de 300ms
+    
+    // Actualizar vista previa
     updateFinalAnswer();
 });
 // Escuchar actualizaciones del compañero
 socket.on("individual-answer-updated", (data) => {
-    // Solo actualizar el contenido del otro estudiante
     const studentKey = data.studentNumber === 1 ? 'student1' : 'student2';
-    if (data.studentNumber !== myStudentNumber) {  // Verificar que sea del otro estudiante
-        studentContents[studentKey] = data.content;
-        updateFinalAnswer();
+    const content = data.content;
+    
+    // Actualizar solo si el contenido es diferente
+    if (studentContents[studentKey] !== content) {
+        studentContents[studentKey] = content;
+        
+        // Si soy el otro estudiante, actualizar el contador
+        if (myStudentNumber !== data.studentNumber) {
+            updateWordCounter(content, studentKey);
+            updateFinalAnswer();
+        }
     }
 });
 
@@ -222,21 +256,25 @@ socket.on("individual-answer-updated", (data) => {
     finalAnswer.value = combinedContent.trim();
 } */
     function updateFinalAnswer() {
-        // Asegurarnos de mostrar ambas respuestas en el orden correcto
-        let student1Content = studentContents.student1 || '';
-        let student2Content = studentContents.student2 || '';
-    
-        // Si ambos tienen contenido, usar un separador
-        let combinedContent = '';
-        if (student1Content && student2Content) {
-            combinedContent = `${student1Content}\n\n${student2Content}`;
+        const student1Content = studentContents.student1.trim();
+        const student2Content = studentContents.student2.trim();
+        
+        const student1Valid = student1Content.length >= 10 && student1Content.length <= 100;
+        const student2Valid = student2Content.length >= 10 && student2Content.length <= 100;
+        
+        // Actualizar contadores para ambos estudiantes
+        updateWordCounter(student1Content, 'student1');
+        updateWordCounter(student2Content, 'student2');
+        
+        if (student1Valid && student2Valid) {
+            finalAnswer.value = `${student1Content}\n\n${student2Content}`;
+            submitButton.disabled = false;
         } else {
-            // Si solo uno tiene contenido, mostrar ese
-            combinedContent = student1Content || student2Content;
+            finalAnswer.value = student1Content.length === 0 && student2Content.length === 0 ? 
+                "Esperando respuestas..." : 
+                "Ambos estudiantes deben escribir entre 10 y 100 caracteres...";
+            submitButton.disabled = true;
         }
-    
-        finalAnswer.value = combinedContent.trim();
-        console.log('Contenido actual:', studentContents); // Para debug
     }
 // Funciones de UI
 function showWaitingMessage(message) {
@@ -443,30 +481,39 @@ socket.on("partner-reconnected", () => {
 // Gestión de respuesta final
 // Gestión de respuesta final
 submitButton.addEventListener("click", () => {
-    const combinedAnswer = finalAnswer.value.trim();
-    if (!combinedAnswer) {
-        alert("Por favor, ambos estudiantes deben contribuir a la respuesta.");
-        return;
-    }
-
-    // Deshabilitar el botón inmediatamente para prevenir doble envío
-    submitButton.disabled = true;
+    const student1Content = studentContents.student1.trim();
+    const student2Content = studentContents.student2.trim();
     
-    // Mostrar mensaje de espera
-    showWaitingMessage("Enviando respuesta...");
+    const student1Length = student1Content.length;
+    const student2Length = student2Content.length;
     
-    // Guardar la respuesta en localStorage por si acaso
-    localStorage.setItem('activity2Response', combinedAnswer);
-    
-    // Emitir el evento de completado con todas las respuestas
-    socket.emit("activity2-complete", { 
-        roomId,
-        answer: combinedAnswer,
-        individualAnswers: {
-            student1: studentContents.student1 || '',
-            student2: studentContents.student2 || ''
+    if (student1Length >= 10 && student1Length <= 100 && 
+        student2Length >= 10 && student2Length <= 100) {
+        
+        const combinedAnswer = finalAnswer.value;
+        
+        if (combinedAnswer.trim()) {
+            submitButton.disabled = true;
+            showWaitingMessage("Enviando respuesta...");
+            
+            localStorage.setItem('activity2Response', combinedAnswer);
+            
+            socket.emit("activity2-complete", {
+                roomId,
+                answer: combinedAnswer,
+                individualAnswers: {
+                    student1: student1Content,
+                    student2: student2Content
+                }
+            });
         }
-    });
+    } else {
+        if (student1Length < 10 || student2Length < 10) {
+            alert("Ambos estudiantes deben escribir al menos 10 caracteres.");
+        } else {
+            alert("Las respuestas no deben exceder los 100 caracteres.");
+        }
+    }
 });
 
 

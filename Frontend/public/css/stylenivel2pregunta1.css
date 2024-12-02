@@ -104,10 +104,17 @@ body {
     gap: 1rem;
 }
 
+.answer-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
 #answer-input {
     width: 100%;
     min-height: clamp(80px, 15vh, 120px);
     padding: 1rem;
+    padding-bottom: 30px; /* Space for counter */
     border: 2px solid #3f87a6;
     border-radius: 8px;
     resize: vertical;
@@ -120,6 +127,27 @@ body {
     outline: none;
     border-color: #2c3e50;
     box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.2);
+}
+
+/* Character Counter Styles */
+.character-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+    pointer-events: none;
+}
+
+.character-counter.error {
+    color: #dc3545;
+}
+
+#answer-input.invalid {
+    border-color: #dc3545;
 }
 
 /* Buttons Container */
@@ -264,15 +292,97 @@ body {
     #answer-input {
         min-height: 60px;
     }
+
+    .buttons-container button {
+        padding: 0.4rem 1rem;
+    }
 }
 
 /* Estilos para dispositivos táctiles */
 @media (hover: none) {
     #answer-input {
-        font-size: 16px;
+        font-size: 16px; /* Previene zoom en iOS */
     }
 
     .buttons-container button:hover {
         transform: none;
+    }
+}
+
+/* Estilos adicionales para el contador de caracteres en móvil */
+@media (max-width: 480px) {
+    .character-counter {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+    
+    #answer-input {
+        padding-bottom: 35px;
+    }
+}
+
+/* Ajustes de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.activity-container *:focus {
+    outline: 2px solid #3f87a6;
+    outline-offset: 2px;
+}
+
+.activity-container *:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Estilos de alto contraste */
+@media (prefers-contrast: high) {
+    .activity-container {
+        background-color: white;
+    }
+
+    .activity-info {
+        background-color: #ffffff;
+        border: 3px solid #000000;
+    }
+
+    #answer-input {
+        border: 3px solid #000000;
+    }
+
+    .character-counter {
+        background: white;
+        color: black;
+        border: 1px solid #000000;
+    }
+
+    .character-counter.error {
+        color: #ff0000;
+        font-weight: bold;
+    }
+
+    #submit-answer {
+        background-color: #000000;
+    }
+
+    .next-button {
+        background-color: #006400;
+    }
+
+    .message.success {
+        background-color: #ffffff;
+        color: #006400;
+        border: 2px solid #006400;
+    }
+
+    .message.error {
+        background-color: #ffffff;
+        color: #ff0000;
+        border: 2px solid #ff0000;
     }
 }
