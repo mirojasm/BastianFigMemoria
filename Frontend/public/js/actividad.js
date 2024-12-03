@@ -148,8 +148,8 @@ function updateWordCounter(content, studentKey) {
     const countDisplay = document.getElementById(`word-count-${studentKey}`);
     
     if (countDisplay) {
-        countDisplay.textContent = `Caracteres: ${wordCount}/100`;
-        countDisplay.style.color = wordCount >= 10 && wordCount <= 100 ? '#00aa00' : '#ff0000';
+        countDisplay.textContent = `Caracteres: ${wordCount}/200`;
+        countDisplay.style.color = wordCount >= 10 && wordCount <= 200 ? '#00aa00' : '#ff0000';
     }
     
     return wordCount;
@@ -159,8 +159,8 @@ individualAnswer.addEventListener("input", (e) => {
     const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
     
     // Limitar a 100 caracteres
-    if (content.length > 100) {
-        e.target.value = content.slice(0, 100);
+    if (content.length > 200) {
+        e.target.value = content.slice(0, 200);
         return;
     }
     
@@ -207,8 +207,8 @@ function updateFinalAnswer() {
     const student1Content = studentContents.student1.trim();
     const student2Content = studentContents.student2.trim();
     
-    const student1Valid = student1Content.length >= 10 && student1Content.length <= 100;
-    const student2Valid = student2Content.length >= 10 && student2Content.length <= 100;
+    const student1Valid = student1Content.length >= 10 && student1Content.length <= 200;
+    const student2Valid = student2Content.length >= 10 && student2Content.length <= 200;
     
     // Actualizar contadores para ambos estudiantes
     updateWordCounter(student1Content, 'student1');
@@ -220,7 +220,7 @@ function updateFinalAnswer() {
     } else {
         finalAnswer.value = student1Content.length === 0 && student2Content.length === 0 ? 
             "Esperando respuestas..." : 
-            "Ambos estudiantes deben escribir entre 10 y 100 caracteres...";
+            "Ambos estudiantes deben escribir entre 10 y 200 caracteres, para que se muestren en la casilla";
         submitButton.disabled = true;
     }
 }
@@ -373,44 +373,12 @@ socket.on("stop-typing", () => {
 	typingIndicator.style.display = "none";
 });
 
-// Frontend/public/js/actividad.js - Modificar el manejo de envío de respuestas
-// Modificar el event listener del botón submit
-/* submitButton.addEventListener("click", () => {
-    const answer = finalAnswer.value.trim();
-    if (answer) {
-		endTime = new Date();
-        submitButton.disabled = true;
-        
-		// Calcular tiempos
-        const timeSpentInSeconds = Math.floor((endTime - startTime) / 1000);
-        // Guardar la respuesta en localStorage para mostrarla en el feedback
-        localStorage.setItem('activity1Response', answer);
-        
-        // Emitir evento de respuesta lista
-        socket.emit("ready-for-next-activity", {
-            roomId,
-            answer,
-            activityNumber: 1,
-            timeData: {
-                startTime: startTime.toISOString(),
-                endTime: endTime.toISOString(),
-                timeSpent: timeSpentInSeconds
-            }
-        });
-        
-        showWaitingMessage("Respuesta enviada. Esperando a tu compañero...");
-    } else if (hasSubmitted) {
-        alert("Ya has enviado tu respuesta.");
-    } else {
-        alert("Por favor, escribe una respuesta antes de enviar.");
-    }
-}); */
 submitButton.addEventListener("click", () => {
     const student1Length = studentContents.student1.trim().length;
     const student2Length = studentContents.student2.trim().length;
     
-    if (student1Length >= 10 && student1Length <= 100 && 
-        student2Length >= 10 && student2Length <= 100) {
+    if (student1Length >= 10 && student1Length <= 200 && 
+        student2Length >= 10 && student2Length <= 200) {
         
         const combinedAnswer = finalAnswer.value;
         
@@ -429,7 +397,7 @@ submitButton.addEventListener("click", () => {
         if (student1Length < 10 || student2Length < 10) {
             alert("Ambos estudiantes deben escribir al menos 10 caracteres.");
         } else {
-            alert("Las respuestas no deben exceder los 100 caracteres.");
+            alert("Las respuestas no deben exceder los 200 caracteres.");
         }
     }
 });

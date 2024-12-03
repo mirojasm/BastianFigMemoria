@@ -41,8 +41,8 @@ function updateWordCounter(content, studentKey) {
     const countDisplay = document.getElementById(`word-count-${studentKey}`);
     
     if (countDisplay) {
-        countDisplay.textContent = `Caracteres: ${wordCount}/100`;
-        countDisplay.style.color = wordCount >= 10 && wordCount <= 100 ? '#00aa00' : '#ff0000';
+        countDisplay.textContent = `Caracteres: ${wordCount}/200`;
+        countDisplay.style.color = wordCount >= 10 && wordCount <= 200 ? '#00aa00' : '#ff0000';
     }
     
     return wordCount;
@@ -197,9 +197,9 @@ individualAnswer.addEventListener("input", (e) => {
     const content = e.target.value;
     const studentKey = myStudentNumber === 1 ? 'student1' : 'student2';
     
-    // Limitar a 100 caracteres
-    if (content.length > 100) {
-        e.target.value = content.slice(0, 100);
+    // Limitar a 200 caracteres
+    if (content.length > 200) {
+        e.target.value = content.slice(0, 200);
         return;
     }
     
@@ -259,8 +259,8 @@ socket.on("individual-answer-updated", (data) => {
         const student1Content = studentContents.student1.trim();
         const student2Content = studentContents.student2.trim();
         
-        const student1Valid = student1Content.length >= 10 && student1Content.length <= 100;
-        const student2Valid = student2Content.length >= 10 && student2Content.length <= 100;
+        const student1Valid = student1Content.length >= 10 && student1Content.length <= 200;
+        const student2Valid = student2Content.length >= 10 && student2Content.length <= 200;
         
         // Actualizar contadores para ambos estudiantes
         updateWordCounter(student1Content, 'student1');
@@ -272,7 +272,7 @@ socket.on("individual-answer-updated", (data) => {
         } else {
             finalAnswer.value = student1Content.length === 0 && student2Content.length === 0 ? 
                 "Esperando respuestas..." : 
-                "Ambos estudiantes deben escribir entre 10 y 100 caracteres...";
+                "Ambos estudiantes deben escribir entre 10 y 200 caracteres para que se muestre en la casilla";
             submitButton.disabled = true;
         }
     }
@@ -487,8 +487,8 @@ submitButton.addEventListener("click", () => {
     const student1Length = student1Content.length;
     const student2Length = student2Content.length;
     
-    if (student1Length >= 10 && student1Length <= 100 && 
-        student2Length >= 10 && student2Length <= 100) {
+    if (student1Length >= 10 && student1Length <= 200 && 
+        student2Length >= 10 && student2Length <= 200) {
         
         const combinedAnswer = finalAnswer.value;
         
@@ -511,7 +511,7 @@ submitButton.addEventListener("click", () => {
         if (student1Length < 10 || student2Length < 10) {
             alert("Ambos estudiantes deben escribir al menos 10 caracteres.");
         } else {
-            alert("Las respuestas no deben exceder los 100 caracteres.");
+            alert("Las respuestas no deben exceder los 200 caracteres.");
         }
     }
 });
