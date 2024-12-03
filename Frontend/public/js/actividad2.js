@@ -123,7 +123,7 @@ let isFirstUser = null;
     
     activityContent.style.display = "block";
 }); */
-socket.on("activity2-user-connected", (data) => {
+/* socket.on("activity2-user-connected", (data) => {
     console.log(`Usuario ${data.userName} conectado a la actividad 2`);
     hideWaitingMessage();
     
@@ -159,7 +159,59 @@ socket.on("activity2-user-connected", (data) => {
     }
     
     activityContent.style.display = "block";
+}); */
+socket.on("activity2-user-connected", (data) => {
+    console.log(`Usuario ${data.userName} conectado a la actividad 2`);
+    hideWaitingMessage();
+    
+    if (isFirstUser === null) {
+        isFirstUser = data.userCount === 1;
+        myRole = isFirstUser ? 'first' : 'second';
+        myStudentNumber = myRole === 'first' ? 1 : 2;
+        
+        // Mostrar/ocultar el botón basado en el rol
+        const submitButtonContainer = document.getElementById("submit-button-container");
+        if (myRole === 'first') {
+            submitButtonContainer.style.display = "block";
+        } else {
+            submitButtonContainer.style.display = "none";
+            // Agregar mensaje informativo para el segundo usuario
+            const infoMessage = document.createElement('div');
+            infoMessage.className = 'info-message';
+            infoMessage.textContent = 'Tu compañero será quien envíe la respuesta final';
+            document.querySelector('.combined-answer').appendChild(infoMessage);
+        }
+        
+        // Resto de tu código existente para asignar textos
+        if (myRole === 'first') {
+            myText.textContent = firstHalf;
+            partnerText.textContent = "Esperando a tu compañero...";
+            mySectionTitle.textContent = "Tu parte (Primera mitad):";
+            partnerSectionTitle.textContent = "Parte de tu compañero (Segunda mitad):";
+        } else {
+            myText.textContent = secondHalf;
+            partnerText.textContent = firstHalf;
+            mySectionTitle.textContent = "Tu parte (Segunda mitad):";
+            partnerSectionTitle.textContent = "Parte de tu compañero (Primera mitad):";
+        }
+
+        // Inicializar el contenido y contador del estudiante actual
+        const studentKey = `student${myStudentNumber}`;
+        studentContents[studentKey] = individualAnswer.value || '';
+        updateWordCounter(individualAnswer.value || '', studentKey);
+        
+        if (individualAnswer.value) {
+            socket.emit("individual-answer-update", {
+                roomId,
+                content: individualAnswer.value,
+                studentNumber: myStudentNumber
+            });
+        }
+    }
+    
+    activityContent.style.display = "block";
 });
+
 socket.on("activity2-ready", (data) => {
     console.log("Actividad 2 lista para comenzar");
     hideWaitingMessage();
@@ -255,7 +307,7 @@ socket.on("individual-answer-updated", (data) => {
     
     finalAnswer.value = combinedContent.trim();
 } */
-    function updateFinalAnswer() {
+    /* function updateFinalAnswer() {
         const student1Content = studentContents.student1.trim();
         const student2Content = studentContents.student2.trim();
         
@@ -275,8 +327,35 @@ socket.on("individual-answer-updated", (data) => {
                 "Ambos estudiantes deben escribir entre 10 y 200 caracteres para que se muestre en la casilla";
             submitButton.disabled = true;
         }
-    }
-// Funciones de UI
+    } */
+        function updateFinalAnswer() {
+            const student1Content = studentContents.student1.trim();
+            const student2Content = studentContents.student2.trim();
+            
+            const student1Valid = student1Content.length >= 10 && student1Content.length <= 200;
+            const student2Valid = student2Content.length >= 10 && student2Content.length <= 200;
+            
+            // Actualizar contadores para ambos estudiantes
+            updateWordCounter(student1Content, 'student1');
+            updateWordCounter(student2Content, 'student2');
+            
+            if (student1Valid && student2Valid) {
+                finalAnswer.value = `${student1Content}\n\n${student2Content}`;
+                // Solo habilitar el botón si es el primer usuario
+                if (myRole === 'first') {
+                    submitButton.disabled = false;
+                }
+            } else {
+                finalAnswer.value = student1Content.length === 0 && student2Content.length === 0 ? 
+                    "Esperando respuestas..." : 
+                    "Ambos estudiantes deben escribir entre 10 y 200 caracteres para que se muestre en la casilla";
+                if (myRole === 'first') {
+                    submitButton.disabled = true;
+                }
+            }
+        }
+
+        // Funciones de UI
 function showWaitingMessage(message) {
     if (waitingMessage) {
         waitingMessage.textContent = message;

@@ -42,11 +42,15 @@
                     </div>
                     
                     <!-- Respuesta conjunta -->
+                    <!-- Modifica la sección de respuesta conjunta -->
                     <div class="combined-answer">
                         <h3>Respuesta conjunta (actualización en tiempo real)</h3>
                         <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta" readonly></textarea>
                         <div id="collaborative-editing-indicator">Tu compañero está editando...</div>
-                        <button id="submit-answer">Enviar Respuesta Final</button>
+                        <!-- Agregar un contenedor para el botón -->
+                        <div id="submit-button-container" style="display: none;">
+                            <button id="submit-answer">Enviar Respuesta Final</button>
+                        </div>
                     </div>
                 </div>
             </div>

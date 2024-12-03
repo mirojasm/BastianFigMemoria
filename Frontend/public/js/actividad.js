@@ -66,7 +66,7 @@ socket.on("reconnect", () => {
 });
 
 // Evento para número de usuario
-socket.on("user-number", (number) => {
+/* socket.on("user-number", (number) => {
     console.log("Recibido número de usuario:", number);
     myStudentNumber = number;
     
@@ -78,8 +78,30 @@ socket.on("user-number", (number) => {
         document.getElementById("text-part-1").style.display = "none";
         document.getElementById("text-part-2").style.display = "block";
     }
+}); */
+socket.on("user-number", (number) => {
+    console.log("Recibido número de usuario:", number);
+    myStudentNumber = number;
+    
+    // Mostrar texto correspondiente
+    if (number === 1) {
+        document.getElementById("text-part-1").style.display = "block";
+        document.getElementById("text-part-2").style.display = "none";
+        // Mostrar el botón solo al usuario 1
+        document.getElementById("submit-button-container").style.display = "block";
+    } else {
+        document.getElementById("text-part-1").style.display = "none";
+        document.getElementById("text-part-2").style.display = "block";
+        // Ocultar el botón para el usuario 2
+        document.getElementById("submit-button-container").style.display = "none";
+        
+        // Agregar mensaje informativo para el usuario 2
+        const infoMessage = document.createElement('div');
+        infoMessage.className = 'info-message';
+        infoMessage.textContent = 'Tu compañero será quien envíe la respuesta final';
+        document.querySelector('.combined-answer').appendChild(infoMessage);
+    }
 });
-
 // Agregar nuevo evento para sincronizar el tiempo en caso de reconexión
 socket.on("sync-time-data", (timeData) => {
     if (timeData.startTime) {
@@ -311,7 +333,12 @@ function addMessageToChat(data) {
     scrollChatToBottom();
 }
 function scrollChatToBottom() {
-	chatMessages.scrollTop = chatMessages.scrollHeight;
+	requestAnimationFrame(() => {
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
 }
 
 function sendMessage() {

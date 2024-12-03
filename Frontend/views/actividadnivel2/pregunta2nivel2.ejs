@@ -26,10 +26,10 @@
             <div class="answer-wrapper">
                 <textarea 
                     id="answer-input" 
-                    placeholder="Escribe tu respuesta aquí... (mínimo 10 caracteres, máximo 100)"
-                    maxlength="100"
+                    placeholder="Escribe tu respuesta aquí... (mínimo 10 caracteres, máximo 200)"
+                    maxlength="200"
                 ></textarea>
-                <div class="character-counter">0/100</div>
+                <div class="character-counter">0/200</div>
             </div>
             <div class="buttons-container">
                 <button id="submit-answer" disabled>Enviar Respuesta</button>
@@ -54,10 +54,10 @@
             // Character counter functionality
             function updateCharacterCount() {
                 const currentLength = answerInput.value.length;
-                characterCounter.textContent = `${currentLength}/100`;
+                characterCounter.textContent = `${currentLength}/200`;
                 
                 // Update counter color and input validation
-                if (currentLength < 10 || currentLength > 100) {
+                if (currentLength < 10 || currentLength >200) {
                     characterCounter.classList.add('error');
                     answerInput.classList.add('invalid');
                     submitButton.disabled = true;
@@ -129,8 +129,8 @@
                     return;
                 }
 
-                if (respuesta.length > 100) {
-                    showMessage('La respuesta no puede exceder los 100 caracteres.', 'error');
+                if (respuesta.length > 200) {
+                    showMessage('La respuesta no puede exceder los 200 caracteres.', 'error');
                     return;
                 }
 
