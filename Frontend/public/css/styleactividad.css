@@ -216,10 +216,17 @@ h1 {
 .chat-sidebar {
     flex: 1;
     display: flex;
+    flex-direction: column;
     min-width: 220px;
     max-width: 350px;
     border-left: 1px solid #e0e0e0;
     padding-left: clamp(0.5rem, 1.5vh, 0.8rem);
+}
+.chat-title {
+    color: #3f87a6;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    margin-bottom: 0.8rem;
+    text-align: center;
 }
 
 .chat-container {
