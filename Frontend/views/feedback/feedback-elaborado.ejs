@@ -188,7 +188,7 @@
                     throw new Error('No se encontró token de autenticación');
                 }
                 
-                const response = await fetch('http://localhost:3001/api/feedback/elaborado', {
+                const response = await fetch('http://10.0.0.104:3001/api/feedback/elaborado', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,

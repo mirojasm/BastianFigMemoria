@@ -328,7 +328,7 @@ socket.on("individual-answer-updated", (data) => {
             submitButton.disabled = true;
         }
     } */
-        function updateFinalAnswer() {
+        /* function updateFinalAnswer() {
             const student1Content = studentContents.student1.trim();
             const student2Content = studentContents.student2.trim();
             
@@ -353,8 +353,30 @@ socket.on("individual-answer-updated", (data) => {
                     submitButton.disabled = true;
                 }
             }
-        }
+        } */
 
+            function updateFinalAnswer() {
+                const student1Content = studentContents.student1.trim();
+                const student2Content = studentContents.student2.trim();
+                
+                // Actualizar contadores para ambos estudiantes
+                updateWordCounter(student1Content, 'student1');
+                updateWordCounter(student2Content, 'student2');
+                
+                // Mostrar el contenido inmediatamente, sin importar la longitud
+                finalAnswer.value = student1Content || student2Content ? 
+                    `${student1Content}\n\n${student2Content}` : 
+                    "Esperando respuestas...";
+                
+                // Validar longitudes solo para el botón de envío
+                const student1Valid = student1Content.length >= 10 && student1Content.length <= 200;
+                const student2Valid = student2Content.length >= 10 && student2Content.length <= 200;
+                
+                // Solo habilitar el botón si las validaciones pasan y es el primer usuario
+                if (myRole === 'first') {
+                    submitButton.disabled = !(student1Valid && student2Valid);
+                }
+            }
         // Funciones de UI
 function showWaitingMessage(message) {
     if (waitingMessage) {

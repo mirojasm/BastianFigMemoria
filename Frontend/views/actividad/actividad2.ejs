@@ -9,14 +9,41 @@
 </head>
 <body>
     <div class="activity-container">
+        <!-- Modal Overlay -->
+        <div id="instructionsModal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title">Instrucciones</h2>
+                    <button class="close-modal" onclick="toggleModal()">&times;</button>
+                </div>
+                <div class="modal-content">
+                    <ol>
+                        <li>Lee atentamente el siguiente texto junto con tu compañero o compañera.</li>
+                        <li>Comuníquense a través del chat para discutir y planificar su respuesta.</li>
+                        <li>Elaboren juntos una respuesta abierta que responda a las preguntas planteadas.</li>
+                        <li>La respuesta final debe ser la unión de 150 caracteres escritos por el primer estudiante y 150 caracteres escritos por el segundo estudiante.</li>
+                        <li>Asegúrense de que, al juntarlas, la respuesta sea coherente y tenga sentido completo. Revisen y ajusten la redacción si es necesario.</li>
+                    </ol>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-button" onclick="toggleModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
         <div class="main-content">
-            <h1>Actividad Colaborativa</h1>
-            <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
+            <div class="header-container">
+                <div class="title-section">
+                    <h1>Actividad Colaborativa</h1>
+                    <p>ID de la Sala: <span id="room-id"><%= roomId %></span></p>
+                </div>
+                <button class="show-modal-button" onclick="toggleModal()">Ver Instrucciones</button>
+            </div>
             <div id="waiting-message">Esperando a tu compañero...</div>
             <div id="activity-content" style="display: none;">
                 <div class="activity-info">
                     <h2>Nivel 3 - Pregunta 2</h2>
-                    <p>¿Qué crees que podría haber pensado la Rana al tomar la decisión de sacrificarse para que los demás la consideraran “auténtica”?</p>
+                    <p>Mientras leían y discutían el texto, ¿cómo pensaron para entender el mensaje y los temas de la historia? Describan cómo llegaron juntos a sus conclusiones. </p>
                 </div>
                 <div class="text-container">
                     <div class="text-section">
@@ -42,12 +69,10 @@
                     </div>
                     
                     <!-- Respuesta conjunta -->
-                    <!-- Modifica la sección de respuesta conjunta -->
                     <div class="combined-answer">
                         <h3>Respuesta conjunta (actualización en tiempo real)</h3>
                         <textarea id="final-answer" rows="4" placeholder="Respuesta final conjunta" readonly></textarea>
                         <div id="collaborative-editing-indicator">Tu compañero está editando...</div>
-                        <!-- Agregar un contenedor para el botón -->
                         <div id="submit-button-container" style="display: none;">
                             <button id="submit-answer">Enviar Respuesta Final</button>
                         </div>
@@ -66,6 +91,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Script para controlar el modal -->
+    <script>
+    function toggleModal() {
+        const modal = document.getElementById('instructionsModal');
+        modal.classList.toggle('show');
+        
+        // Prevenir scroll del body cuando el modal está abierto
+        if (modal.classList.contains('show')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // Cerrar el modal si se hace clic fuera de él
+    document.getElementById('instructionsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            toggleModal();
+        }
+    });
+    </script>
+
     <script src="/resources/js/actividad2.js"></script>
 </body>
 </html>

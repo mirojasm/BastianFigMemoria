@@ -20,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
             roomOptions.innerHTML = '';
             
             // Usando los mismos rangos que en los event listeners
-            if (userInfo.id >= 1 && userInfo.id <= 3) {
+            if (userInfo.id >= 1 && userInfo.id <= 22) {
                 roomOptions.innerHTML = `
                     <button id="create-room">Crear Nueva Sala</button>
                 `;
-            } else if (userInfo.id > 3 && userInfo.id <= 6) {
+            } else if (userInfo.id >22 && userInfo.id <= 44) {
                 roomOptions.innerHTML = `
                     <div class="join-room">
                         <input type="text" id="room-id" placeholder="Ingresa el ID de la sala">
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Las mismas condiciones que arriba
-        if (userInfo.id >= 1 && userInfo.id <= 3 && createRoomBtn) {
+        if (userInfo.id >= 1 && userInfo.id <= 22 && createRoomBtn) {
             createRoomBtn.addEventListener('click', () => {
                 if (socket.connected) {
                     socket.emit('create-room');
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        if (userInfo.id > 3 && userInfo.id <= 6 && joinRoomBtn && roomIdInput) {
+        if (userInfo.id >22  && userInfo.id <= 44 && joinRoomBtn && roomIdInput) {
             joinRoomBtn.addEventListener('click', () => {
                 const roomId = roomIdInput.value.trim();
                 if (roomId) {

@@ -6,51 +6,53 @@ const prisma = new PrismaClient();
 
 
 // Respuestas esperadas para cada pregunta
+// Respuestas esperadas actualizadas para cada pregunta
 const RESPUESTAS_ESPERADAS = {
-    1: "Creo que tanto las personas como las empresas deberían estar dispuestas a dejar de lado algunas comodidades para cuidar el medio ambiente. ",
-    2: "La Rana podría haber pasado tiempo reflexionando sobre sus propias cualidades y entendiendo lo que la hacía única, sin necesitar que otros le dijeran cómo debía ser.",
-    3: "La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar. ",
-    4: "La imagen es una ilustración que muestra a una persona en el agua, aparentemente en peligro y levantando una mano en señal de ayuda. A su alrededor, un grupo de personas en la orilla sostiene sus teléfonos y toma fotos o videos de la situación en lugar de ayudar. ",
-    5: "La narradora experimenta la lluvia por primera vez en un patio interior con un naranjo, lo cual puede parecer bien o mal mientras se responda la pregunta",
-    6: "El texto describe una experiencia personal de descubrimiento y aprendizaje."
+    1: "La rana tomó decisiones inadecuadas al buscar su autenticidad en la opinión y aprobación de otros, llegando al extremo de mutilarse para complacer a los demás. Una decisión más adecuada habría sido desarrollar su propia identidad y valor personal sin depender de la validación externa.",
+    2: "El proceso de comprensión del texto involucró identificar el tema principal de la autenticidad, analizar las acciones y motivaciones de la rana, y reflexionar sobre las consecuencias de buscar la aprobación externa. La discusión colaborativa permitió compartir diferentes perspectivas y profundizar en el mensaje sobre la importancia de la autenticidad personal.",
+    3: "Las personas en la orilla actuaron de manera inadecuada al priorizar documentar el incidente en lugar de ayudar a la persona en peligro. Sus acciones podrían tener consecuencias fatales para la víctima y demuestran una falta de empatía y responsabilidad social. La respuesta apropiada sería buscar ayuda inmediata o intentar auxiliar a la persona de manera segura.",
+    4: "Al analizar la imagen, primero observé la situación de emergencia con la persona en el agua, luego noté el contraste con la actitud de los espectadores usando sus teléfonos. Esto me llevó a reflexionar sobre el impacto de la tecnología en nuestras respuestas ante emergencias y la desensibilización ante el sufrimiento ajeno.",
+    5: "La madre actuó adecuadamente al ayudar a su hija a comprender y superar su miedo a la lluvia. Su aproximación fue efectiva porque combinó apoyo emocional (tomarla en brazos) con explicación racional (explicar que es un fenómeno natural), ayudando a transformar el miedo en comprensión y apreciación.",
+    6: "Para comprender las emociones de la niña, me enfoqué en sus descripciones sensoriales (sonidos, visuales) y sus reacciones emocionales. Observé cómo su experiencia evolucionó desde la curiosidad inicial por el naranjo, pasando por el miedo ante la lluvia, hasta llegar a la tranquilidad gracias a la explicación de su madre."
 };
-// Agregar contexto adicional solo para el feedback acumulado
+
+// Contexto extendido actualizado
 const CONTEXTO_EXTENDIDO = {
     1: {
-        tipo: "evaluacion",
-        tematica: "Medio ambiente y responsabilidad social",
-        habilidades: ["Análisis crítico", "Evaluación de impacto", "Toma de decisiones"],
-        aspectos_clave: ["Equilibrio entre comodidad y responsabilidad", "Impacto ambiental", "Compromiso social"]
+        tipo: "analisis_critico",
+        tematica: "Autenticidad y presión social",
+        habilidades: ["Evaluación de decisiones", "Pensamiento crítico", "Análisis de consecuencias"],
+        aspectos_clave: ["Autenticidad personal", "Influencia social", "Toma de decisiones"]
     },
     2: {
         tipo: "metacognicion",
-        tematica: "Identidad y autenticidad",
-        habilidades: ["Reflexión personal", "Análisis de motivaciones", "Pensamiento independiente"],
-        aspectos_clave: ["Autoconocimiento", "Presión social", "Valores personales"]
+        tematica: "Proceso de comprensión colaborativa",
+        habilidades: ["Reflexión metacognitiva", "Pensamiento colaborativo", "Análisis textual"],
+        aspectos_clave: ["Proceso de pensamiento", "Trabajo colaborativo", "Construcción de significado"]
     },
     3: {
-        tipo: "analisis_imagen",
-        tematica: "Comportamiento social y tecnología",
-        habilidades: ["Interpretación visual", "Análisis de comportamiento social", "Juicio ético"],
-        aspectos_clave: ["Responsabilidad social", "Uso de tecnología", "Empatía"]
+        tipo: "analisis_situacional",
+        tematica: "Responsabilidad social y ética",
+        habilidades: ["Juicio ético", "Pensamiento crítico", "Toma de decisiones"],
+        aspectos_clave: ["Responsabilidad social", "Comportamiento ético", "Consecuencias de acciones"]
     },
     4: {
-        tipo: "analisis_imagen",
-        tematica: "Comportamiento social y tecnología",
-        habilidades: ["Interpretación visual", "Análisis de comportamiento social", "Juicio ético"],
-        aspectos_clave: ["Responsabilidad social", "Uso de tecnología", "Empatía"]
+        tipo: "metacognicion",
+        tematica: "Proceso de análisis visual",
+        habilidades: ["Pensamiento visual", "Análisis secuencial", "Reflexión metacognitiva"],
+        aspectos_clave: ["Proceso de observación", "Interpretación visual", "Construcción de significado"]
     },
     5: {
-        tipo: "comprension_lectora",
-        tematica: "Experiencias personales y percepción",
-        habilidades: ["Interpretación textual", "Análisis de experiencias", "Comprensión emocional"],
-        aspectos_clave: ["Perspectiva personal", "Experiencia sensorial", "Memoria y emoción"]
+        tipo: "analisis_critico",
+        tematica: "Relaciones familiares y aprendizaje",
+        habilidades: ["Evaluación de comportamiento", "Análisis de relaciones", "Pensamiento crítico"],
+        aspectos_clave: ["Apoyo parental", "Manejo emocional", "Aprendizaje experiencial"]
     },
     6: {
-        tipo: "comprension_lectora",
-        tematica: "Experiencias personales y aprendizaje",
-        habilidades: ["Interpretación textual", "Análisis narrativo", "Reflexión personal"],
-        aspectos_clave: ["Experiencia personal", "Proceso de aprendizaje", "Descubrimiento"]
+        tipo: "metacognicion",
+        tematica: "Comprensión de experiencias y emociones",
+        habilidades: ["Análisis emocional", "Reflexión metacognitiva", "Comprensión narrativa"],
+        aspectos_clave: ["Proceso de comprensión", "Análisis emocional", "Interpretación textual"]
     }
 };
 
@@ -275,7 +277,7 @@ export class FeedbackService {
 
                 1.Análisis detallado de cada respuesta
                 2.Aspectos positivos en cada respuesta
-                3.En las preguntas colaborativas, haz comentarios si el diálogo del chat colaborativo ayudó a tener una mejor respuesta.
+                3.En las preguntas colaborativas, haz comentarios si el diálogo del chat colaborativo que se te proporciona, ayudó a tener una mejor respuesta.
                 4.Observaciones de las habilidades de pensamiento crítico en las respuestas
                 5.Sugerencias de mejoras específicas
                 6.Patrones identificados en el estilo de respuesta del estudiante
@@ -317,7 +319,7 @@ export class FeedbackService {
                 ${[5, 6].includes(p.preguntaId) ? 
                     `\nContexto: La primera vez que vi la lluvia fue una tarde de verano en un patio interior. Ese patio era un mundo completo, con una fuente de pajaros en el centro, muchas flores y un viejo naranjo con el tronco blanco. Yo me hallaba contenta contemplando aquel árbol tan raro, cuyas hojas eran como una sustancia verde y tenía algunas frutas tan grandes y redondas como bolas de billar. De pronto escuché un ruido  sobre los techos de las casas vecinas, el cielo se oscureció y empezaron a caer gotas de agua fría, después fue un diluvio. Aquello me pareció extraordinario, un sonido aterrador y maravilloso. El patio se inundó de inmediato, los caminos se convirtieron en pequeños lagos, el naranjo sacudía sus ramas mojadas y enormes gotas rebotaban en el suelo y sobre la fuente. Me acurruqué en un rincón, me encontraba con miedo porque creí que el mundo se estaba rompiendo. Mi madre me tomó en sus brazos para tranquilizarme, me asomó al patio y me dijo que no tuviera miedo, que eso era sólo la lluvia, un fenómeno natural tan lindo como el sol.` : ''}
                 
-                Acá están las respuestas esperadas y las respuestas del estudiante para cada pregunta.
+                Acá están las respuestas esperadas y las respuestas del estudiante para cada pregunta, en las colaborativas todos deben escribir.
                 Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
                 Respuesta del estudiante: ${p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal}
                 ${p.tipo === 'colaborativa' && p.historialChat ? `
@@ -872,7 +874,7 @@ async obtenerRespuestasColaborativas(userId) {
 
                 1.Análisis detallado de cada respuesta
                 2.Aspectos positivos en cada respuesta
-                3.En las preguntas colaborativas, haz comentarios si el diálogo del chat colaborativo ayudó a tener una mejor respuesta.
+                3.En las preguntas colaborativas, haz comentarios si el diálogo del chat colaborativo que se te proporciona, ayudó a tener una mejor respuesta.
                 4.Observar y dar comentarios sobre el tiempo que conllevo a responder cada pregunta.
                 5.Sugerencias para mejorar
                 6.Recomendaciones generales para futuras actividades.
@@ -910,6 +912,7 @@ async obtenerRespuestasColaborativas(userId) {
 
                 Respuesta esperada: ${RESPUESTAS_ESPERADAS[p.preguntaId]}
                 Respuesta del estudiante: ${p.tipo === 'individual' ? p.respuestaIndividual : p.respuestaFinal}
+                Acá se encuentra el chat colaborativo, donde todos participan.
                 ${p.tipo === 'colaborativa' && p.historialChat ? `
                 Acá están las conversaciones de los estudiantes, durante las preguntas colaborativas.
                 ${p.historialChat.map(msg => `${msg.emisor}: ${msg.mensaje}`).join('\n')}
@@ -932,7 +935,7 @@ async obtenerRespuestasColaborativas(userId) {
                 messages: [{ role: 'user', content: prompt }],
                 model: 'gpt-4-0613',
                 temperature: 0.5,
-                max_tokens: 1000
+                max_tokens: 1500
             });
     
             const feedbackContent = completion.choices[0].message.content;

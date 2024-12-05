@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001/api";
+const API_URL = "http://10.0.0.104:3001/api";
 
 const preguntasService = {
     getPregunta: async (id, token) => {

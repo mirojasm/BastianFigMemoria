@@ -225,7 +225,7 @@ socket.on("individual-answer-updated", (data) => {
         }
     }
 });
-function updateFinalAnswer() {
+/* function updateFinalAnswer() {
     const student1Content = studentContents.student1.trim();
     const student2Content = studentContents.student2.trim();
     
@@ -245,7 +245,25 @@ function updateFinalAnswer() {
             "Ambos estudiantes deben escribir entre 10 y 200 caracteres, para que se muestren en la casilla";
         submitButton.disabled = true;
     }
-}
+} */
+    function updateFinalAnswer() {
+        const student1Content = studentContents.student1.trim();
+        const student2Content = studentContents.student2.trim();
+        
+        // Actualizar contadores para ambos estudiantes
+        updateWordCounter(student1Content, 'student1');
+        updateWordCounter(student2Content, 'student2');
+        
+        // Mostrar el contenido inmediatamente
+        finalAnswer.value = `${student1Content}\n\n${student2Content}`;
+        
+        // Solo habilitar el botón cuando se cumplan los requisitos de longitud
+        const student1Valid = student1Content.length >= 10 && student1Content.length <= 200;
+        const student2Valid = student2Content.length >= 10 && student2Content.length <= 200;
+        submitButton.disabled = !(student1Valid && student2Valid);
+    }
+
+
 function updateCombinedPreview() {
     // Actualizar secciones de vista previa
     document.querySelector("#student1-content .content").textContent = studentContents.student1;

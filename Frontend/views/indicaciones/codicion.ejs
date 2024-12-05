@@ -28,18 +28,56 @@
                 
                 <p class="important-note">Antes de tomar esta decisión, es importante que sepas lo siguiente:</p>
                 <ul class="important-points">
-                    <li>Tu participación en este estudio ha sido autorizada por tus padres; sin embargo, si tú prefieres no participar, nadie te puede obligar a hacerlo.</li>
-                    <li>Tu participación consiste en realizar una serie de actividades digitales, como simulaciones y videojuegos, que registrarán tus respuestas y cómo interactúas con ellas.</li>
-                    <li>Nadie conocerá tus respuestas: tu participación será confidencial.</li>
+                    <li>Tu participación en este estudio ha sido autorizada por tus padres; sin embargo, si tu prefieres no participar, nadie te puede obligar a hacerlo.</li>
+                    <li>Tu participación consiste en realizar una serie de actividades digitales, como simulaciones y videojuegos, que registrarán tus respuestas y cómo interactúas con el ellas. Estas actividades durarán aproximadamente 1 hora y media y se realizarán en tu escuela. Nadie (ni tus padres, ni tus profesores, ni tus compañeros) conocerá tus respuestas: es decir, tu participación será confidencial, sin que se dé a conocer tu nombre Tu participación es voluntaria, puedes no contestar ciertas preguntas o retirarte en cualquier momento; el que tu decidas no participar o no contestar todas las preguntas no tendrá ninguna consecuencia para ti; ni tus padres ni tus profesores o compañeros sabrán si tu decidiste participar o no en el estudio.</li>
                     <li>Tus respuestas serán utilizadas únicamente para los fines de esta investigación.</li>
-                    <li>Puedes decidir no participar en cualquier momento, sin ninguna consecuencia para ti.</li>
-                    <li>Si tienes más preguntas, puedes hacerlas a la persona que está dirigiendo la actividad.</li>
+                    <li>Tu participación es voluntaria; puedes decidir no participar en cualquier momento, y si eliges no participar o no contestar todas las preguntas, no tendrá ninguna consecuencia para ti. Ni tus padres, ni tus profesores, ni tus compañeros sabrán si decidiste participar o no en el estudio.</li>
+                    <li>Es importante que sepas que no hay beneficios personales para ti al participar en este proyecto, pero tampoco tendrás molestias, más allá de estar ese tiempo realizando las actividades digitales en el computador o tablet.</li>
+                    <li>En el caso que tengas más preguntas sobre esta investigación, se las puedes hacer a la persona que está dirigiendo la actividad, o puedes pedirle a tus padres que te ayuden a contactarte con la Investigadora Responsable del estudio, quien con mucho gusto responderará tus dudas.</li>
                 </ul>
+
+                <p class="declaration">Declaro que he leído y comprendido esta página y estoy de acuerdo en participar en este estudio.</p>
             </div>
 
             <div class="buttons-container">
-                <a href="/instructivo" class="button" role="button">Comenzar</a>
+                <a href="/instructivo" class="button button-accept" role="button">Estoy de acuerdo</a>
+                <a href="/login" class="button button-reject" role="button">No estoy de acuerdo</a>
             </div>
+
+            <style>
+                .buttons-container {
+                    display: flex;
+                    gap: 20px;
+                    justify-content: center;
+                    margin-top: 20px;
+                }
+                
+                .button {
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: background-color 0.3s ease;
+                }
+                
+                .button-accept {
+                    background-color: #4CAF50;
+                    color: white;
+                }
+                
+                .button-reject {
+                    background-color: #f44336;
+                    color: white;
+                }
+                
+                .button-accept:hover {
+                    background-color: #45a049;
+                }
+                
+                .button-reject:hover {
+                    background-color: #da190b;
+                }
+            </style>
         </div>
     </main>
 
