@@ -160,7 +160,7 @@ let isFirstUser = null;
     
     activityContent.style.display = "block";
 }); */
-socket.on("activity2-user-connected", (data) => {
+/* socket.on("activity2-user-connected", (data) => {
     console.log(`Usuario ${data.userName} conectado a la actividad 2`);
     hideWaitingMessage();
     
@@ -210,8 +210,47 @@ socket.on("activity2-user-connected", (data) => {
     }
     
     activityContent.style.display = "block";
-});
+}); */
+socket.on("activity2-user-connected", (data) => {
+    console.log(`Usuario ${data.userName} conectado a la actividad 2`);
+    hideWaitingMessage();
+    
+    if (isFirstUser === null) {
+        isFirstUser = data.userCount === 1;
+        myRole = isFirstUser ? 'first' : 'second';
+        myStudentNumber = myRole === 'first' ? 1 : 2;
+        
+        // Mostrar el botón para ambos usuarios
+        const submitButtonContainer = document.getElementById("submit-button-container");
+        submitButtonContainer.style.display = "block";
+        
+        if (myRole === 'first') {
+            myText.textContent = firstHalf;
+            partnerText.textContent = "Esperando a tu compañero...";
+            mySectionTitle.textContent = "Tu parte (Primera mitad):";
+            partnerSectionTitle.textContent = "Parte de tu compañero (Segunda mitad):";
+        } else {
+            myText.textContent = secondHalf;
+            partnerText.textContent = firstHalf;
+            mySectionTitle.textContent = "Tu parte (Segunda mitad):";
+            partnerSectionTitle.textContent = "Parte de tu compañero (Primera mitad):";
+        }
 
+        const studentKey = `student${myStudentNumber}`;
+        studentContents[studentKey] = individualAnswer.value || '';
+        updateWordCounter(individualAnswer.value || '', studentKey);
+        
+        if (individualAnswer.value) {
+            socket.emit("individual-answer-update", {
+                roomId,
+                content: individualAnswer.value,
+                studentNumber: myStudentNumber
+            });
+        }
+    }
+    
+    activityContent.style.display = "block";
+});
 socket.on("activity2-ready", (data) => {
     console.log("Actividad 2 lista para comenzar");
     hideWaitingMessage();
@@ -359,23 +398,18 @@ socket.on("individual-answer-updated", (data) => {
                 const student1Content = studentContents.student1.trim();
                 const student2Content = studentContents.student2.trim();
                 
-                // Actualizar contadores para ambos estudiantes
                 updateWordCounter(student1Content, 'student1');
                 updateWordCounter(student2Content, 'student2');
                 
-                // Mostrar el contenido inmediatamente, sin importar la longitud
                 finalAnswer.value = student1Content || student2Content ? 
                     `${student1Content}\n\n${student2Content}` : 
                     "Esperando respuestas...";
                 
-                // Validar longitudes solo para el botón de envío
                 const student1Valid = student1Content.length >= 10 && student1Content.length <= 200;
                 const student2Valid = student2Content.length >= 10 && student2Content.length <= 200;
                 
-                // Solo habilitar el botón si las validaciones pasan y es el primer usuario
-                if (myRole === 'first') {
-                    submitButton.disabled = !(student1Valid && student2Valid);
-                }
+                // Habilitar el botón para ambos usuarios si las validaciones pasan
+                submitButton.disabled = !(student1Valid && student2Valid);
             }
         // Funciones de UI
 function showWaitingMessage(message) {

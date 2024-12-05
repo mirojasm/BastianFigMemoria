@@ -212,7 +212,7 @@ io.on("connection", async (socket) => {
 	});
 
 	
-	socket.on("chat-message", async (data) => {
+	/* socket.on("chat-message", async (data) => {
 		const userInfo = connectedUsers.get(socket.id);
 		const roomId = userInfo.room;
 	
@@ -246,7 +246,25 @@ io.on("connection", async (socket) => {
 				}
 			}
 		}
-	});
+	}); */
+socket.on("chat-message", async (data) => {
+    const userInfo = connectedUsers.get(socket.id);
+    const roomId = userInfo?.room;
+
+    if (!roomId || !rooms[roomId]) {
+        socket.emit("error", { message: "Sala no encontrada" });
+        return;
+    }
+
+    const messageData = {
+        userId: socket.id,
+        userName: userInfo.nombre,
+        message: data.message,
+        timestamp: new Date().toISOString()
+    };
+
+    io.to(roomId).emit("chat-message", messageData);
+});
 	socket.on("update-final-answer", (data) => {
 		const roomId = data.roomId;
 		if (rooms[roomId]) {
@@ -311,20 +329,7 @@ socket.on("ready-for-next-activity", async (data) => {
         }
     }
 
-    // Verificar si ambos usuarios han enviado sus respuestas
-    /* if (userResponses[roomId].size === 2) {
-        roomState.bothUsersSubmitted = true;
-        roomState.currentActivity = 2;
-
-        // Emitir evento para iniciar la transición
-        io.to(roomId).emit("start-activity-transition", {
-            nextActivity: 2,
-            roomId: roomId
-        });
-
-        // Limpiar las respuestas para la siguiente actividad
-        userResponses[roomId].clear();
-    } */
+    
 });
 
 	// Añadir este nuevo evento para manejar la reconexión en actividad2

@@ -79,7 +79,7 @@ socket.on("reconnect", () => {
         document.getElementById("text-part-2").style.display = "block";
     }
 }); */
-socket.on("user-number", (number) => {
+/* socket.on("user-number", (number) => {
     console.log("Recibido número de usuario:", number);
     myStudentNumber = number;
     
@@ -101,6 +101,22 @@ socket.on("user-number", (number) => {
         infoMessage.textContent = 'Tu compañero será quien envíe la respuesta final';
         document.querySelector('.combined-answer').appendChild(infoMessage);
     }
+}); */
+socket.on("user-number", (number) => {
+    console.log("Recibido número de usuario:", number);
+    myStudentNumber = number;
+    
+    // Mostrar texto correspondiente
+    if (number === 1) {
+        document.getElementById("text-part-1").style.display = "block";
+        document.getElementById("text-part-2").style.display = "none";
+    } else {
+        document.getElementById("text-part-1").style.display = "none";
+        document.getElementById("text-part-2").style.display = "block";
+    }
+    
+    // Mostrar el botón para ambos usuarios
+    document.getElementById("submit-button-container").style.display = "block";
 });
 // Agregar nuevo evento para sincronizar el tiempo en caso de reconexión
 socket.on("sync-time-data", (timeData) => {
